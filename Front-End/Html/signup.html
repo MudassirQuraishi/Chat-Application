@@ -7,6 +7,7 @@
       src="https://kit.fontawesome.com/64d58efce2.js"
       crossorigin="anonymous"
     ></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.5.0/axios.min.js"></script>
     <link rel="stylesheet" href="../Css/signup.css" />
     <title>Welcome To Q Chat</title>
   </head>
@@ -18,11 +19,11 @@
             <h2 class="title">Sign in</h2>
             <div class="input-field">
               <i class="fas fa-user"></i>
-              <input type="text" placeholder="Username or Email" />
+              <input type="text" placeholder="Username or Email" required />
             </div>
             <div class="input-field">
               <i class="fas fa-lock"></i>
-              <input type="password" placeholder="Password" />
+              <input type="password" placeholder="Password" required />
             </div>
             <input type="submit" value="Login" class="btn solid" />
             <a href="" class="reset-password">Forgot Password?</a>
@@ -47,21 +48,46 @@
             <h2 class="title">Sign up</h2>
             <div class="input-field">
               <i class="fas fa-user"></i>
-              <input type="text" placeholder="Username" />
+              <input
+                type="text"
+                placeholder="Username"
+                id="username-signup"
+                required
+              />
             </div>
             <div class="input-field">
               <i class="fas fa-envelope"></i>
-              <input type="email" placeholder="Email" />
+              <input
+                type="email"
+                placeholder="Email"
+                id="email-signup"
+                required
+              />
             </div>
             <div class="input-field">
               <i class="fas fa-phone"></i>
-              <input type="tel" placeholder="Phone Number" />
+              <input
+                type="tel"
+                placeholder="Phone Number"
+                id="contact-number"
+                required
+              />
             </div>
             <div class="input-field">
               <i class="fas fa-lock"></i>
-              <input type="password" placeholder="Password" />
+              <input
+                type="password"
+                placeholder="Password"
+                id="password"
+                required
+              />
             </div>
-            <input type="submit" class="btn" value="Sign up" />
+            <input
+              type="submit"
+              class="btn"
+              value="Sign up"
+              id="signup-button"
+            />
             <p class="social-text">Or Sign up with social platforms</p>
             <div class="social-media">
               <a href="#" class="social-icon">
@@ -106,7 +132,6 @@
         </div>
       </div>
     </div>
-
-    <script src="../JavaScript/script.js"></script>
+    <script src="../JavaScript/signup.js"></script>
   </body>
 </html>

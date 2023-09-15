@@ -1,0 +1,27 @@
+const express = require("express");
+const bodyParser = require("body-parser");
+const cors = require("cors");
+require("dotenv").config();
+const sequelize = require("./Utilities/database");
+
+const User = require("./Models/userModel");
+
+const userRoutes = require("./Routes/userRoutes");
+
+const app = express();
+app.use(bodyParser.json());
+app.use(cors());
+
+app.use("/user", userRoutes);
+
+sequelize
+  .sync({ alter: true })
+  .then((response) => {
+    const port = process.env.PORT;
+    console.log(`Starting server on ----------> port: ${port}`);
+    app.listen(port);
+  })
+  .catch((error) => {
+    console.log(error);
+    console.log("Error Starting / Syncing the server");
+  });
