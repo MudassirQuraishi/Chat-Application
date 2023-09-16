@@ -81,6 +81,7 @@ async function signin(e) {
       if (response.status === 200) {
         localStorage.setItem("token", response.data.encryptedId);
         alert("Logged In Successfully");
+        window.location.href = "../Html/chat.html";
       } else if (response.status === 401) {
         siginPassword.value = "";
         alert("Invalid password");
