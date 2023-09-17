@@ -45,7 +45,7 @@ async function signup(e) {
         password: password.value,
       };
       const response = await axios.post(
-        "http://localhost:3000/user/signup",
+        "http://localhost:3000/users/signup",
         signupDetails
       );
       console.log(response.status);
@@ -75,7 +75,7 @@ async function signin(e) {
         password: siginPassword.value,
       };
       const response = await axios.post(
-        "http://localhost:3000/user/login",
+        "http://localhost:3000/users/login",
         siginDetials
       );
       if (response.status === 200) {

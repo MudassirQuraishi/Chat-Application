@@ -6,6 +6,7 @@ const sequelize = require("./Utilities/database");
 
 const User = require("./Models/userModel");
 
+const loginRoutes = require("./Routes/loginRoutes");
 const userRoutes = require("./Routes/userRoutes");
 
 const app = express();
@@ -17,6 +18,7 @@ app.use(
   })
 );
 
+app.use("/users", loginRoutes);
 app.use("/user", userRoutes);
 
 sequelize

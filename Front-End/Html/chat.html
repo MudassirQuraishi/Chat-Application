@@ -7,7 +7,7 @@
       href="https://cdn.jsdelivr.net/npm/remixicon@3.2.0/fonts/remixicon.css"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="tailwindcss-colors.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.5.0/axios.min.js"></script>
     <link rel="stylesheet" href="../Css/chat.css" />
     <title>Chat</title>
   </head>
@@ -39,7 +39,7 @@
                 ><i class="ri-settings-line"></i
               ></a>
             </li>
-            <li class="chat-sidebar-profile">
+            <li class="chat-sidebar-profile" data-title="Profile">
               <button type="button" class="chat-sidebar-profile-toggle">
                 <i class="ri-user-line"></i>
               </button>
@@ -70,13 +70,68 @@
                 <i class="ri-search-line"></i>
               </button>
             </form>
-            <div class="content-messages"></div>
+            <div class="content-messages">
+              <ul class="content-messages-list">
+                Contacts
+              </ul>
+            </div>
           </div>
           <!-- end: Content side -->
           <!-- start: Conversation -->
           <div class="conversation conversation-default active">
             <i class="ri-chat-3-line"></i>
             <p>Select chat and view conversation!</p>
+          </div>
+          <div class="conversation" id="conversation-1">
+            <div class="conversation-top">
+              <!-- <button type="button" class="conversation-back">
+                <i class="ri-arrow-left-line"></i>
+              </button> -->
+              <div class="conversation-user">
+                <!-- <img
+                  class="conversation-user-image"
+                  src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8OXx8cGVvcGxlfGVufDB8fDB8fHww&auto=format&fit=crop&w=500&q=60"
+                  alt=""
+                />
+                <div>
+                  <div class="conversation-user-name">Someone</div>
+                  <div class="conversation-user-status online">online</div>
+                </div> -->
+              </div>
+              <div class="conversation-buttons">
+                <button type="button"><i class="ri-phone-fill"></i></button>
+                <button type="button"><i class="ri-vidicon-line"></i></button>
+                <button type="button">
+                  <i class="ri-information-line"></i>
+                </button>
+              </div>
+            </div>
+            <div class="conversation-main">
+              <ul class="conversation-wrapper"></ul>
+            </div>
+            <div class="conversation-form">
+              <button type="button" class="conversation-form-button">
+                <i class="ri-emotion-line"></i>
+              </button>
+              <div class="conversation-form-group">
+                <textarea
+                  class="conversation-form-input"
+                  rows="1"
+                  id="chat-box"
+                  placeholder="Type here..."
+                ></textarea>
+                <button type="button" class="conversation-form-record">
+                  <i class="ri-mic-line"></i>
+                </button>
+              </div>
+              <button
+                type="button"
+                class="conversation-form-button conversation-form-submit"
+                id="submit-button"
+              >
+                <i class="ri-send-plane-2-line"></i>
+              </button>
+            </div>
           </div>
           <!-- end: Conversation -->
         </div>
@@ -86,5 +141,6 @@
     <!-- end: Chat -->
 
     <script src="../JavaScript/chat.js"></script>
+    <script src="../JavaScript/chatScript.js"></script>
   </body>
 </html>

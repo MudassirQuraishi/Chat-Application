@@ -61,6 +61,7 @@ document.querySelectorAll("[data-conversation]").forEach(function (item) {
     document.querySelector(this.dataset.conversation).classList.add("active");
   });
 });
+console.log(document.querySelectorAll("[data-conversation]"));
 
 document.querySelectorAll(".conversation-back").forEach(function (item) {
   item.addEventListener("click", function (e) {
