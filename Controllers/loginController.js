@@ -20,6 +20,8 @@ exports.signup = async (req, res) => {
           email: req.body.email,
           password: hash,
           phoneNumber: req.body.phoneNumber,
+          lastSeen: new Date(),
+          bio: "No Calls. Only Q Chat",
         },
       });
       if (data[1]) {
@@ -63,11 +65,18 @@ exports.signin = async (req, res) => {
       const jwtToken = generateAutheticationToken(data[0].dataValues);
       const inputCredentials = req.body;
       const databaseCredentials = data[0].dataValues;
+      const userId = databaseCredentials.id;
+      const currentTime = new Date();
+
       bcrypt.compare(
         inputCredentials.password,
         databaseCredentials.password,
-        function (err, result) {
+        async function (err, result) {
           if (result) {
+            const response = await User.update(
+              { lastSeen: currentTime },
+              { where: { id: userId } }
+            );
             res.status(200).json({
               message: "logged in successfully",
               success: true,

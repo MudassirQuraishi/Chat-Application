@@ -13,4 +13,10 @@ router.get(
   middleware.authenticateToken,
   userController.getChat
 );
+router.post(
+  "/add-contact",
+  middleware.authenticateToken,
+  userController.addContact
+);
+router.get("/friends", middleware.authenticateToken, userController.getFriends);
 module.exports = router;
