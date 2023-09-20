@@ -225,14 +225,41 @@ async function generateChat(id) {
       { headers: { Authorization: token } }
     );
     const userData = response.data.user;
-    console.log(userData);
     localStorage.setItem("currentUser", userData.id);
     await generateHead(userData);
 
     // Assuming you have a reference to the container element where you want to append this structure
 
     //main
-    await generateMain();
+    const conversationWrapper = document.querySelector(".conversation-wrapper");
+
+    setInterval(async () => {
+      // Apply fade-out transition
+      conversationWrapper.classList.remove("fade-in");
+      conversationWrapper.classList.add("fade-out");
+
+      // Wait for the fade-out animation to complete (adjust the delay as needed)
+      setTimeout(async () => {
+        // Clear the content and remove fade-out class
+
+        const token = localStorage.getItem("token");
+        const receiver = localStorage.getItem("currentUser");
+        const details = { receiver: receiver };
+        let messages = 0;
+        const response = await getChatAPI(token, details);
+        if (messages === 0 || messages < response.data.data.length) {
+          conversationWrapper.innerHTML = "";
+          conversationWrapper.classList.remove("fade-out");
+          messages = response.data.data.length;
+          await generateMain(response.data.data);
+        }
+
+        // Add new content (e.g., call generateMain())
+
+        // Apply the fade-in class to trigger the fade-in transition
+        conversationWrapper.classList.add("fade-in");
+      }, 500); // Wait for 500 milliseconds (adjust as needed)
+    }, 1000);
 
     //asdas
   } catch (error) {}
@@ -255,7 +282,6 @@ async function sendChat() {
       detail,
       { headers: { Authorization: token } }
     );
-    console.log(respone);
 
     box.value = "";
   } catch (error) {}
@@ -287,19 +313,19 @@ async function generateHead(userData) {
   container.appendChild(img);
   container.appendChild(divWrapper);
 }
-async function generateMain() {
+async function getChatAPI(token, details) {
+  const response = await axios.post(
+    "http://localhost:3000/chat/get-chat",
+    details,
+    {
+      headers: { Authorization: token },
+    }
+  );
+  return response;
+}
+async function generateMain(data) {
   try {
-    const token = localStorage.getItem("token");
-    const receiver = localStorage.getItem("currentUser");
-    const details = { receiver: receiver };
-    const response = await axios.post(
-      "http://localhost:3000/chat/get-chat",
-      details,
-      {
-        headers: { Authorization: token },
-      }
-    );
-    response.data.data.forEach(async (item) => {
+    const previousChats = data.forEach(async (item) => {
       await createMessage(item);
     });
   } catch (error) {
@@ -307,7 +333,6 @@ async function generateMain() {
   }
 }
 async function createMessage(item) {
-  console.log(item);
   // Create a new list item element
   const listItem = document.createElement("li");
   if (item.messageStatus === "recieved") {
