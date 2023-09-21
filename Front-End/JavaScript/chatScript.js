@@ -1,6 +1,11 @@
 document.addEventListener("DOMContentLoaded", async function () {
   const menuItems = document.querySelectorAll(".chat-sidebar-menu li");
   const contentSidebarTitle = document.querySelector(".content-sidebar-title");
+  const messages = localStorage.getItem("Messages");
+  if (messages === null) {
+    let messages = [];
+    localStorage.setItem("Messages", JSON.stringify(messages));
+  }
   menuItems.forEach((item) => {
     item.addEventListener("click", async function (event) {
       event.preventDefault();
@@ -96,7 +101,6 @@ document.querySelectorAll("[data-conversation]").forEach(function (item) {
     document.querySelector(this.dataset.conversation).classList.add("active");
   });
 });
-console.log(document.querySelectorAll("[data-conversation]"));
 
 document.querySelectorAll(".conversation-back").forEach(function (item) {
   item.addEventListener("click", function (e) {
@@ -288,7 +292,10 @@ async function generateChat(id) {
       setTimeout(async () => {
         const token = localStorage.getItem("token");
         const receiver = localStorage.getItem("currentUser");
-        const details = { receiver: receiver };
+        const existingMessages = localStorage.getItem("Messages");
+        const length = JSON.parse(existingMessages).length;
+        const details = { receiver: receiver, existingMessages: length };
+
         let messages = 0;
         const response = await getChatAPI(token, details);
         if (messages === 0 || messages < response.length) {
@@ -373,6 +380,7 @@ async function generateMain(data) {
 }
 async function createMessage(item) {
   // Create a new list item element
+
   const listItem = document.createElement("li");
   if (item.messageStatus === "recieved") {
     listItem.classList.add("conversation-item", "me");
@@ -479,4 +487,28 @@ async function createMessage(item) {
 
   // Append the list item to the conversation-wrapper ul element
   conversationWrapper.appendChild(listItem);
+}
+
+function addDivider() {
+  // Create a new div element for the divider
+  var divider = document.createElement("div");
+  divider.className = "conversation-divider";
+
+  // Create a span element for the anchor tag
+  var span = document.createElement("span");
+
+  // Create an anchor tag
+  var anchor = document.createElement("a");
+  anchor.href = "#"; // You can set the href attribute to your desired link
+  anchor.textContent = "Load Previous Elements";
+
+  // Append the anchor tag to the span
+  span.appendChild(anchor);
+
+  // Append the span to the divider
+  divider.appendChild(span);
+
+  // Append the divider to the conversation container
+  var conversation = document.getElementById("conversation");
+  conversation.appendChild(divider);
 }

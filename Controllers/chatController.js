@@ -26,9 +26,20 @@ exports.addChat = async (req, res) => {
 };
 
 exports.getChats = async (req, res) => {
+  const limit = 10;
   try {
     const senderId = req.user.id;
     const recieverId = req.body.receiver;
+    const dbMessges = await Chat.count({
+      where: {
+        [Op.or]: [
+          { senderId: senderId, receiverId: recieverId },
+          { senderId: recieverId, receiverId: senderId },
+        ],
+        conversation_type: "user",
+      },
+    });
+    let offset = dbMessges <= 10 ? 0 : dbMessges - limit;
     const response = await Chat.findAll({
       where: {
         [Op.or]: [
@@ -38,22 +49,25 @@ exports.getChats = async (req, res) => {
         conversation_type: "user",
       },
       order: [["timestamp", "ASC"]],
+      offset: offset,
+      limit: limit,
     });
+
+    console.log(limit);
     const messages = response.map((obj) => ({
       ...obj.dataValues,
       ["messageStatus"]:
         obj.dataValues.senderId == senderId ? "sent" : "recieved",
+      ["prevMessages"]: offset > 0 ? true : false,
     }));
     res
       .status(200)
       .json({ success: true, message: "Retrievd All Chats", data: messages });
   } catch (error) {
     console.log(error);
-    res
-      .status(500)
-      .json({
-        success: false,
-        message: "Internal Server Error. Error Getting Chats",
-      });
+    res.status(500).json({
+      success: false,
+      message: "Internal Server Error. Error Getting Chats",
+    });
   }
 };
