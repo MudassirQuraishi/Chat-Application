@@ -35,20 +35,25 @@ exports.getChats = async (req, res) => {
           { senderId: senderId, receiverId: recieverId },
           { senderId: recieverId, receiverId: senderId },
         ],
-        conversation_type: "user", // Assuming 'user' for one-on-one user conversations
+        conversation_type: "user",
       },
-      order: [["timestamp", "ASC"]], // Order messages by timestamp in ascending order
+      order: [["timestamp", "ASC"]],
     });
     const messages = response.map((obj) => ({
-      ...obj.dataValues, // Spread the existing object properties
+      ...obj.dataValues,
       ["messageStatus"]:
-        obj.dataValues.senderId == senderId ? "sent" : "recieved", // Add the new key-value pair
+        obj.dataValues.senderId == senderId ? "sent" : "recieved",
     }));
     res
       .status(200)
       .json({ success: true, message: "Retrievd All Chats", data: messages });
   } catch (error) {
     console.log(error);
-    res.status(500).json({ success: false, message: "Internal Server Error" });
+    res
+      .status(500)
+      .json({
+        success: false,
+        message: "Internal Server Error. Error Getting Chats",
+      });
   }
 };

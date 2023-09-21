@@ -1,30 +1,21 @@
 document.addEventListener("DOMContentLoaded", async function () {
   const menuItems = document.querySelectorAll(".chat-sidebar-menu li");
-  const contentMessages = document.querySelector(".content-messages-list");
   const contentSidebarTitle = document.querySelector(".content-sidebar-title");
   menuItems.forEach((item) => {
     item.addEventListener("click", async function (event) {
-      event.preventDefault(); // Prevent the default link behavior
-
-      // Remove 'active' class from previously active item
+      event.preventDefault();
       const previouslyActiveItem = document.querySelector(
         ".chat-sidebar-menu li.active"
       );
       if (previouslyActiveItem) {
         previouslyActiveItem.classList.remove("active");
       }
-
-      // Add 'active' class to the clicked item
       item.classList.add("active");
-
-      // Change the text content of the content-sidebar-title based on the clicked item
       contentSidebarTitle.textContent = item.children[0].dataset.title;
       if (item.dataset.title !== undefined) {
         contentSidebarTitle.textContent = item.dataset.title;
       }
-      // Check which li is active and insert data accordingly
       if (item.classList.contains("active")) {
-        // Insert data into content-messages based on the active item
         if (item.children[0].dataset.title === "Chats") {
           await getAllChats();
         } else if (item.children[0].dataset.title === "Add-Friends") {
@@ -42,8 +33,82 @@ document.addEventListener("DOMContentLoaded", async function () {
     });
   });
 });
+// start: Sidebar
+document
+  .querySelector(".chat-sidebar-profile-toggle")
+  .addEventListener("click", function (e) {
+    e.preventDefault();
+    this.parentElement.classList.toggle("active");
+  });
+
+document.addEventListener("click", function (e) {
+  if (!e.target.matches(".chat-sidebar-profile, .chat-sidebar-profile *")) {
+    document.querySelector(".chat-sidebar-profile").classList.remove("active");
+  }
+});
+// end: Sidebar
+
+// start: Coversation
+document
+  .querySelectorAll(".conversation-item-dropdown-toggle")
+  .forEach(function (item) {
+    item.addEventListener("click", function (e) {
+      e.preventDefault();
+      if (this.parentElement.classList.contains("active")) {
+        this.parentElement.classList.remove("active");
+      } else {
+        document
+          .querySelectorAll(".conversation-item-dropdown")
+          .forEach(function (i) {
+            i.classList.remove("active");
+          });
+        this.parentElement.classList.add("active");
+      }
+    });
+  });
+
+document.addEventListener("click", function (e) {
+  if (
+    !e.target.matches(
+      ".conversation-item-dropdown, .conversation-item-dropdown *"
+    )
+  ) {
+    document
+      .querySelectorAll(".conversation-item-dropdown")
+      .forEach(function (i) {
+        i.classList.remove("active");
+      });
+  }
+});
+
+document.querySelectorAll(".conversation-form-input").forEach(function (item) {
+  item.addEventListener("input", function () {
+    this.rows = this.value.split("\n").length;
+  });
+});
+
+document.querySelectorAll("[data-conversation]").forEach(function (item) {
+  item.addEventListener("click", function (e) {
+    e.preventDefault();
+    document.querySelectorAll(".conversation").forEach(function (i) {
+      i.classList.remove("active");
+    });
+    document.querySelector(this.dataset.conversation).classList.add("active");
+  });
+});
+console.log(document.querySelectorAll("[data-conversation]"));
+
+document.querySelectorAll(".conversation-back").forEach(function (item) {
+  item.addEventListener("click", function (e) {
+    e.preventDefault();
+    this.closest(".conversation").classList.remove("active");
+    document.querySelector(".conversation-default").classList.add("active");
+  });
+});
+// end: Coversation
+
 document.addEventListener("DOMContentLoaded", getAllChats());
-//function to get all chats
+
 async function getAllChats() {
   const token = localStorage.getItem("token");
   const container = document.querySelector(".content-messages-list");
@@ -79,17 +144,7 @@ async function getAllFriends() {
   const conversations = document.querySelectorAll(".conversation");
   conversations[1].classList.remove("active");
   conversations[0].classList.add("active");
-  // document.querySelectorAll(".conversation.active").forEach(function (i) {
-  //   i.classList.remove("active");
-  // });
-  // const convo = document
-  //   .querySelectorAll("conversation.conversation-default")
-  //   .forEach((i) => {
-  //     i.classList.add("active");
-  //   });
-
   container.innerHTML = "";
-
   try {
     const response = await axios.get("http://localhost:3000/user/friends", {
       headers: { Authorization: token },
@@ -103,9 +158,7 @@ async function getAllFriends() {
         e.preventDefault();
         const confirmation = confirm("Do you want to start Chattting?");
         if (confirmation) {
-          // If the user clicks "Yes," you can perform the action to add them as a contact here
-          /* Get the current user's ID */
-          const contactId = this.id; // Assuming this.id is the ID of the person you want to add
+          const contactId = this.id;
         }
       });
     });
@@ -129,19 +182,12 @@ async function getAllUsers() {
       item.addEventListener("click", async function (e) {
         e.preventDefault();
         console.log("Opened Chat");
-        // document.querySelectorAll(".conversation").forEach(function (i) {
-        //   i.classList.remove("active");
-        // });
-        // document
-        //   .querySelector(this.dataset.conversation)
-        //   .classList.add("active");
+
         const confirmation = confirm(
           "Do you want to add this person as your friend?"
         );
         if (confirmation) {
-          // If the user clicks "Yes," you can perform the action to add them as a contact here
-          /* Get the current user's ID */
-          const contactId = this.id; // Assuming this.id is the ID of the person you want to add
+          const contactId = this.id;
           await addContact(contactId);
         }
       });
@@ -226,6 +272,7 @@ async function generateChat(id) {
     );
     const userData = response.data.user;
     localStorage.setItem("currentUser", userData.id);
+    localStorage.setItem("chatStatus", "true");
     await generateHead(userData);
 
     // Assuming you have a reference to the container element where you want to append this structure
@@ -238,30 +285,21 @@ async function generateChat(id) {
       conversationWrapper.classList.remove("fade-in");
       conversationWrapper.classList.add("fade-out");
 
-      // Wait for the fade-out animation to complete (adjust the delay as needed)
       setTimeout(async () => {
-        // Clear the content and remove fade-out class
-
         const token = localStorage.getItem("token");
         const receiver = localStorage.getItem("currentUser");
         const details = { receiver: receiver };
         let messages = 0;
         const response = await getChatAPI(token, details);
-        if (messages === 0 || messages < response.data.data.length) {
+        if (messages === 0 || messages < response.length) {
           conversationWrapper.innerHTML = "";
           conversationWrapper.classList.remove("fade-out");
-          messages = response.data.data.length;
-          await generateMain(response.data.data);
+          messages = response.length;
+          await generateMain(response);
         }
-
-        // Add new content (e.g., call generateMain())
-
-        // Apply the fade-in class to trigger the fade-in transition
         conversationWrapper.classList.add("fade-in");
-      }, 500); // Wait for 500 milliseconds (adjust as needed)
+      }, 500);
     }, 1000);
-
-    //asdas
   } catch (error) {}
 }
 
@@ -272,7 +310,6 @@ async function sendChat() {
   const receiver = localStorage.getItem("currentUser");
   try {
     const box = document.getElementById("chat-box");
-    // console.log(box.value);
     const detail = {
       message: box.value,
       receiver: receiver,
@@ -321,7 +358,9 @@ async function getChatAPI(token, details) {
       headers: { Authorization: token },
     }
   );
-  return response;
+  localStorage.setItem("Messages", JSON.stringify(response.data.data));
+  const messages = JSON.parse(localStorage.getItem("Messages"));
+  return messages;
 }
 async function generateMain(data) {
   try {

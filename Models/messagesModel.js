@@ -1,5 +1,5 @@
 const { DataTypes } = require("sequelize");
-const sequelize = require("../Utilities/database"); // Replace with your Sequelize configuration
+const sequelize = require("../Utilities/database");
 
 const Message = sequelize.define("Message", {
   content: {

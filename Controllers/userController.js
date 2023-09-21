@@ -37,7 +37,6 @@ exports.addContact = async (req, res) => {
   const userId = req.user.id;
   const contactId = req.body.contactId;
   try {
-    // Check if the user and contact exist
     const user = await User.findByPk(userId);
     const contact = await User.findByPk(contactId);
 
@@ -45,7 +44,6 @@ exports.addContact = async (req, res) => {
       return res.status(404).json({ message: "User or contact not found." });
     }
 
-    // Check if the contact is not already added
     const existingContact = await Contact.findOne({
       where: { userId: userId, contactId: contactId },
     });
@@ -54,7 +52,6 @@ exports.addContact = async (req, res) => {
       return res.status(203).json({ message: "Contact already added." });
     }
 
-    // Create a new contact entry
     await Contact.create({ userId, contactId });
 
     res.status(201).json({ message: "Contact added successfully." });

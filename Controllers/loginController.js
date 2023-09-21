@@ -4,7 +4,6 @@ const jwt = require("jsonwebtoken");
 const { Op } = require("sequelize");
 
 exports.signup = async (req, res) => {
-  console.log(req.body);
   try {
     const saltRounds = 10;
     const password = req.body.password;
