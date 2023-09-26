@@ -1,18 +1,17 @@
-const User = require("../Models/userModel");
 const Chat = require("../Models/messagesModel");
+
 const { Op } = require("sequelize");
-const sequelize = require("../Utilities/database");
 
 exports.addChat = async (req, res) => {
   try {
-    const message = req.body.message;
-    const recieverId = JSON.parse(req.body.receiver);
-    const senderId = req.user.id;
+    const { message, receiverId } = req.body;
+    const { user } = req;
     const sentMessage = await Chat.create({
       content: message,
       timeStamp: new Date(),
-      senderId: senderId,
-      receiverId: recieverId,
+      senderId: user.id,
+      receiverId: receiverId,
+      conversation_type: "user",
     });
     res.status(200).json({
       success: true,
@@ -26,25 +25,25 @@ exports.addChat = async (req, res) => {
 };
 
 exports.getChats = async (req, res) => {
-  const limit = 10;
+  const limit = 100;
   try {
-    const senderId = req.user.id;
-    const recieverId = req.body.receiver;
+    const { id } = req.user;
+    const { receiver } = req.body;
     const dbMessges = await Chat.count({
       where: {
         [Op.or]: [
-          { senderId: senderId, receiverId: recieverId },
-          { senderId: recieverId, receiverId: senderId },
+          { senderId: id, receiverId: receiver },
+          { senderId: receiver, receiverId: id },
         ],
         conversation_type: "user",
       },
     });
-    let offset = dbMessges <= 10 ? 0 : dbMessges - limit;
+    let offset = dbMessges <= 100 ? 0 : dbMessges - limit;
     const response = await Chat.findAll({
       where: {
         [Op.or]: [
-          { senderId: senderId, receiverId: recieverId },
-          { senderId: recieverId, receiverId: senderId },
+          { senderId: id, receiverId: receiver },
+          { senderId: receiver, receiverId: id },
         ],
         conversation_type: "user",
       },
@@ -53,13 +52,67 @@ exports.getChats = async (req, res) => {
       limit: limit,
     });
 
-    console.log(limit);
+    const messages = response.map((obj) => ({
+      ...obj.dataValues,
+      ["messageStatus"]: obj.dataValues.senderId == id ? "sent" : "recieved",
+      ["prevMessages"]: offset > 0 ? true : false,
+    }));
+    res
+      .status(200)
+      .json({ success: true, message: "Retrievd All Chats", data: messages });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      success: false,
+      message: "Internal Server Error. Error Getting Chats",
+    });
+  }
+};
+exports.sendGroupChats = async (req, res) => {
+  try {
+    const { message, receiver } = req.body;
+    const { user } = req;
+    const chat = await Chat.create({
+      content: message,
+      conversation_type: "group",
+      senderId: user.id,
+      groupId: receiver,
+      timeStamp: new Date(),
+    });
+
+    res.status(200).json({ success: true });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Internal Server" });
+  }
+};
+
+exports.getGroupChats = async (req, res) => {
+  try {
+    const limit = 100;
+    const { receiver } = req.body;
+    const { user } = req;
+    const dbMessages = await Chat.count({
+      where: {
+        groupId: receiver,
+      },
+    });
+    let offset = dbMessages <= 100 ? 0 : dbMessages - limit;
+    const response = await Chat.findAll({
+      where: {
+        groupId: receiver,
+      },
+      order: [["timestamp", "ASC"]],
+      offset: offset,
+      limit: limit,
+    });
+
     const messages = response.map((obj) => ({
       ...obj.dataValues,
       ["messageStatus"]:
-        obj.dataValues.senderId == senderId ? "sent" : "recieved",
+        obj.dataValues.senderId == user.id ? "sent" : "recieved",
       ["prevMessages"]: offset > 0 ? true : false,
     }));
+
     res
       .status(200)
       .json({ success: true, message: "Retrievd All Chats", data: messages });

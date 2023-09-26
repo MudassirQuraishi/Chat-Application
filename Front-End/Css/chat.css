@@ -680,7 +680,114 @@ body {
 .ri-arrow-left-line {
   color: black;
 }
+.group-add {
+  padding: 0px 15px;
+}
+.group-add li {
+  list-style: none;
+}
+.group-add li a {
+  color: #333;
+  text-decoration: none;
+}
+/* Modal Styles */
+.modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  z-index: 1;
+  justify-content: center;
+  align-items: center;
+}
 
+.modal-content {
+  background-color: #fff;
+  margin: 15% auto;
+  padding: 20px;
+  border: 1px solid #888;
+  width: 50%;
+  position: relative;
+  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
+  transition: 0.3s;
+  border-radius: 8px;
+}
+
+.close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 24px;
+  cursor: pointer;
+  color: #888;
+}
+
+.close:hover {
+  color: #ff0000;
+}
+
+/* Form Styles */
+#groupForm {
+  margin-top: 20px;
+}
+
+#groupForm label {
+  font-weight: bold;
+}
+
+#groupName,
+#groupDescription,
+#groupUsers {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 16px;
+}
+
+.modal-buttons {
+  margin-top: 20px;
+  text-align: right;
+}
+
+#confirmBtn,
+#cancelBtn {
+  padding: 10px 20px;
+  margin-left: 10px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+#confirmBtn {
+  background-color: #059669;
+  color: #fff;
+}
+
+#cancelBtn {
+  background-color: #ccc;
+  color: #000;
+}
+
+#confirmBtn:hover {
+  background-color: #047857;
+}
+
+#cancelBtn:hover {
+  background-color: #999;
+}
+.group-add.active {
+  display: block; /* Show the div when active */
+}
+
+/* Optionally, you can hide it by default */
+.group-add {
+  display: none;
+}
 /* start: Breakpoints */
 @media screen and (max-width: 1600px) {
   .chat-container {

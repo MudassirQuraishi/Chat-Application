@@ -25,22 +25,26 @@
               <a href="#" data-title="Chats"><i class="ri-chat-3-line"></i></a>
             </li>
             <li>
-              <a href="#" data-title="Friends"
-                ><i class="ri-contacts-line"></i
-              ></a>
-            </li>
-            <li>
-              <a href="#" data-title="Add-Friends"
-                ><i class="ri-user-add-line"></i
-              ></a>
-            </li>
-
-            <!-- <i class="ri-user-add-line"></i> -->
-            <li>
               <a href="#" data-title="Groups"
                 ><i class="ri-group-2-line"></i
               ></a>
             </li>
+            <li>
+              <a href="#" data-title="Friends"
+                ><i class="ri-user-heart-line"></i
+              ></a>
+            </li>
+            <li>
+              <a href="#" data-title="Requests"
+                ><i class="ri-user-add-line"></i
+              ></a>
+            </li>
+            <li>
+              <a href="#" data-title="Add-Friends"
+                ><i class="ri-user-search-line"></i
+              ></a>
+            </li>
+
             <li>
               <a href="#" data-title="Settings"
                 ><i class="ri-settings-line"></i
@@ -78,6 +82,13 @@
               </button>
             </form>
             <div class="content-messages">
+              <div class="group-add" id="groupAddDiv">
+                <li>
+                  <a href="#" id="add-group-link"
+                    ><i class="ri-add-line"></i> Create New Group</a
+                  >
+                </li>
+              </div>
               <ul class="content-messages-list">
                 Contacts
               </ul>
@@ -95,7 +106,7 @@
               <div class="conversation-buttons">
                 <button type="button"><i class="ri-phone-fill"></i></button>
                 <button type="button"><i class="ri-vidicon-line"></i></button>
-                <button type="button">
+                <button type="button" class="info-button" id="info-button">
                   <i class="ri-information-line"></i>
                 </button>
               </div>
@@ -134,7 +145,55 @@
     </section>
     <!-- end: Chat -->
 
-    <script src="../JavaScript/chat.js"></script>
+    <div id="myModal" class="modal">
+      <div class="modal-content">
+        <span class="close" id="closeModal">&times;</span>
+        <h2>Create Group</h2>
+        <form id="groupForm">
+          <label for="groupName">Group Name:</label>
+          <input type="text" id="groupName" name="groupName" required />
+
+          <label for="groupDescription">Description:</label>
+          <textarea
+            id="groupDescription"
+            name="groupDescription"
+            required
+          ></textarea>
+
+          <label for="groupUsers">Users to Add:</label>
+          <input
+            type="text"
+            id="groupUsers"
+            name="groupUsers"
+            autocomplete="off"
+          />
+          <div id="userSuggestions"></div>
+
+          <div class="modal-buttons">
+            <button type="submit" id="confirmBtn">Confirm</button>
+            <button type="button" id="cancelBtn">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- New modal for adding members -->
+    <div id="addMembersModal" class="modal">
+      <div class="modal-content">
+        <span class="close" id="closeAddMembersModal">&times;</span>
+        <h2>Add Members to Group</h2>
+        <form id="addMembersForm">
+          <!-- Dynamically populate with user checkboxes -->
+          <div id="userCheckboxes"></div>
+
+          <div class="modal-buttons">
+            <button type="submit" id="confirmAddMembersBtn">Add Members</button>
+            <button type="button" id="cancelAddMembersBtn">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
     <script src="../JavaScript/chatScript.js"></script>
   </body>
 </html>

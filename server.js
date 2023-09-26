@@ -14,6 +14,7 @@ const Attachment = require("./Models/attachementModel");
 const loginRoutes = require("./Routes/loginRoutes");
 const userRoutes = require("./Routes/userRoutes");
 const chatRoutes = require("./Routes/chatRoutes");
+const groupRoutes = require("./Routes/groupRoutes");
 
 const app = express();
 app.use(bodyParser.json());
@@ -40,6 +41,7 @@ Attachment.belongsTo(Message, { as: "message", foreignKey: "messageId" });
 app.use("/users", loginRoutes);
 app.use("/user", userRoutes);
 app.use("/chat", chatRoutes);
+app.use("/groups", groupRoutes);
 
 sequelize
   // .sync({ alter: true })
