@@ -31,7 +31,7 @@ exports.authenticateToken = async (req, res, next) => {
 		const decodedId = jwt.verify(token, secretKey);
 
 		// Find the user associated with the decoded ID
-		const loggedInUserData = await User.findByPk(decodedId);
+		const loggedInUserData = await User.findByPk(decodedId.id);
 
 		if (!loggedInUserData) {
 			return res.status(401).json({ error: "Unauthorized: Invalid token" });

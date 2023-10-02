@@ -67,5 +67,34 @@ router.get("/:group_id/contacts", middleware.authenticateToken, groupController.
  */
 router.post("/:group_id/invite", middleware.authenticateToken, groupController.inviteMember);
 
+/**
+ * Delete Member Route
+ *
+ * Delete a user to join a specific group.
+ *
+ * @route POST /groups/:group_id/delete
+ * @authenticated
+ * @param {string} group_id - The ID of the group to Delete the user form.
+ * @param {Object} req.body - The user information to delete.
+ * @returns {Object} A response indicating the success of the deletion.
+ */
+router.post("/:group_id/delete", middleware.authenticateToken, groupController.deleteMembers);
+
+// Export the router for use in other parts of the application
+module.exports = router;
+
+/**
+ * Make Admin Route
+ *
+ * Make user admin of a specific group
+ *
+ * @route POST /groups/:group_id/admin
+ * @authenticated
+ * @param {string} group_id - The ID of the group to to update admins
+ * @param {Object} req.body - The user information to upgrade as admin.
+ * @returns {Object} A response indicating the success of upgrading as admin.
+ */
+router.post("/:group_id/admin", middleware.authenticateToken, groupController.makeAdmin);
+
 // Export the router for use in other parts of the application
 module.exports = router;

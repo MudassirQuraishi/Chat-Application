@@ -84,7 +84,7 @@ exports.signin = async (req, res) => {
 			}
 
 			if (result) {
-				const jwtToken = token.generateAutheticationToken(user);
+				const jwtToken = token.generateAuthenticationToken(user);
 				const userId = user.id;
 				const currentTime = new Date();
 

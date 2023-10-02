@@ -1,4 +1,6 @@
-// signup_information
+/** @format */
+
+// DOM Elements for Sign Up
 const username = document.getElementById("username-signup");
 const email = document.getElementById("email-signup");
 const phoneNumber = document.getElementById("contact-number");
@@ -6,114 +8,120 @@ const password = document.getElementById("password");
 const sign_up_btn = document.querySelector("#sign-up-btn");
 const signupButton = document.getElementById("signup-button");
 
-// signin_information
-const siginName = document.getElementById("signin-email");
-const siginPassword = document.getElementById("signin-password");
+// DOM Elements for Sign In
+const signinName = document.getElementById("signin-email");
+const signinPassword = document.getElementById("signin-password");
 const sign_in_btn = document.querySelector("#sign-in-btn");
 const signinButton = document.getElementById("signin-button");
 const container = document.querySelector(".container");
 
-//Event Listeners
-{
-  sign_up_btn.addEventListener("click", () => {
-    container.classList.add("sign-up-mode");
-  });
+// Event Listeners
+sign_up_btn.addEventListener("click", () => {
+	container.classList.add("sign-up-mode");
+});
 
-  sign_in_btn.addEventListener("click", () => {
-    container.classList.remove("sign-up-mode");
-  });
+sign_in_btn.addEventListener("click", () => {
+	container.classList.remove("sign-up-mode");
+});
 
-  signupButton.addEventListener("click", signup);
-  signinButton.addEventListener("click", signin);
-}
-//signup function
-async function signup(e) {
-  // Doing form validation that the user has entered all the neccessary fields
-  if (
-    username.value === "" ||
-    email.value === "" ||
-    phoneNumber.value === "" ||
-    password.value === ""
-  ) {
-    alert("Please enter all details");
-  } else {
-    //If the user has entered all the neccessary fields, then save the data in an object and make a network call to the backend
-    try {
-      const signupDetails = {
-        username: username.value,
-        email: email.value,
-        phoneNumber: phoneNumber.value,
-        password: password.value,
-      };
-      // Make a POST call to the backend to save the user information in the database
-      const response = await axios.post(
-        "http://localhost:3000/users/signup",
-        signupDetails
-      );
-      //After getting the response check for the response status and move forward accordingly
-      if (response.status === 200 || response.status === 201) {
-        if (response.status === 200) {
-          alert("Created successfully, Login to Continue");
-        } else if (response.status === 201) {
-          alert("User already exits, Login to Continue");
-        }
-        //Clear the input fields if a successful response was received
-        username.value = "";
-        email.value = "";
-        phoneNumber.value = "";
-        password.value = "";
-        //Now shift the mode from signu to signin
-        container.classList.remove("sign-up-mode");
-      }
-    } catch (error) {
-      //If a 500 status code is returned or there was an internal server error then notify the user
-      console.log(error.message);
-      alert("Error Signing Up");
-    }
-  }
+signupButton.addEventListener("click", signup);
+signinButton.addEventListener("click", signin);
+
+/**
+ * Function for handling user sign-up.
+ */
+async function signup() {
+	try {
+		// Form validation
+		if (isInputEmpty(username) || isInputEmpty(email) || isInputEmpty(phoneNumber) || isInputEmpty(password)) {
+			throw new Error("Please enter all details");
+		}
+
+		// User details
+		const signupDetails = {
+			username: username.value,
+			email: email.value,
+			phoneNumber: phoneNumber.value,
+			password: password.value,
+		};
+
+		// Make a POST call to the backend to save user information
+		const response = await axios.post("http://localhost:3000/users/signup", signupDetails);
+
+		if (response.status === 200) {
+			alert("Account created successfully. Log in to continue.");
+			clearInputs(username, email, phoneNumber, password);
+			container.classList.remove("sign-up-mode");
+		} else if (response.status === 201) {
+			alert("User already exists. Log in to continue.");
+		}
+	} catch (error) {
+		handleError(error, "Error signing up");
+	}
 }
 
-//Signin Function
-async function signin(e) {
-  // Doing form validation that the user has entered all the neccessary fields
-  if (siginName.value === "" || siginPassword.value === "") {
-    alert("Please Fill All Details");
-  } else {
-    //If all the neccesary fields have been filled then save the data in an object
-    try {
-      const siginDetials = {
-        username: siginName.value,
-        password: siginPassword.value,
-      };
-      //Now make a POST network call to the backend to verify whether the userdata exists in the database or not
-      const response = await axios.post(
-        "http://localhost:3000/users/login",
-        siginDetials
-      );
-      //Now redirect the user according to the response status
-      if (response.status === 200) {
-        //Status 200 means that a succesfull llogin attempt was made, then we will store the user information as an encryptedID in the localstorage which will be used frequently for user authentication.
-        localStorage.setItem("token", response.data.encryptedId);
-        siginName.value = "";
-        siginPassword.value = "";
-        alert("Logged In Successfully");
-        //Only after loggging in succesfully we will redirect user to the chat page
-        window.location.href = "../Html/chat.html";
-      } else if (response.status === 401) {
-        //Status 401 means that the user password is incorrect, alert the user to enter the correct password
-        siginPassword.value = "";
-        alert("Invalid password");
-      } else if (response.status === 404) {
-        //Statsu code 404 means that there is no user with the specified details,, alert the user to signup
-        siginName.value = "";
-        siginPassword = "";
-        alert("User not found, Please sign up");
-        container.classList.add("sign-up-mode");
-      }
-    } catch (error) {
-      console.log("Error During Login");
-      console.log(error.message);
-      alert("Login Failed please refresh");
-    }
-  }
+/**
+ * Function for handling user sign-in.
+ */
+async function signin() {
+	try {
+		// Form validation
+		if (isInputEmpty(signinName) || isInputEmpty(signinPassword)) {
+			throw new Error("Please fill in all details");
+		}
+
+		// User details
+		const signinDetails = {
+			username: signinName.value,
+			password: signinPassword.value,
+		};
+
+		// Make a POST call to the backend to verify user credentials
+		const response = await axios.post("http://localhost:3000/users/login", signinDetails);
+
+		if (response.status === 200) {
+			// Store the user information (encrypted ID) in local storage for authentication
+			localStorage.setItem("token", response.data.encryptedId);
+			clearInputs(signinName, signinPassword);
+			alert("Logged in successfully.");
+			window.location.href = "../Html/chat.html"; // Redirect to chat page
+		} else if (response.status === 401) {
+			alert("Invalid password. Please enter the correct password.");
+			clearInputs(signinPassword);
+		} else if (response.status === 404) {
+			alert("User not found. Please sign up.");
+			clearInputs(signinName, signinPassword);
+			container.classList.add("sign-up-mode");
+		}
+	} catch (error) {
+		handleError(error, "Login failed. Please refresh and try again.");
+	}
+}
+
+/**
+ * Helper function to check if an input field is empty.
+ * @param {HTMLInputElement} input - The input field to check.
+ * @returns {boolean} True if the input is empty, false otherwise.
+ */
+function isInputEmpty(input) {
+	return input.value.trim() === "";
+}
+
+/**
+ * Helper function to clear input fields.
+ * @param {...HTMLInputElement} inputs - Input fields to clear.
+ */
+function clearInputs(...inputs) {
+	inputs.forEach((input) => (input.value = ""));
+}
+
+/**
+ * Helper function to handle errors.
+ * @param {Error} error - The error object.
+ * @param {string} message - The error message to display.
+ */
+function handleError(error, message) {
+	console.error(message);
+	console.error(error.message);
+	alert(message);
 }
