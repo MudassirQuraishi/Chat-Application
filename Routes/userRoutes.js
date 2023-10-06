@@ -86,5 +86,7 @@ router.post("/add-contact", middleware.authenticateToken, userController.addCont
  */
 router.get("/friends", middleware.authenticateToken, userController.getFriends);
 
+router.get("/self", middleware.authenticateToken, userController.getSelfDetails);
+
 // Export the router for use in other parts of the application
 module.exports = router;

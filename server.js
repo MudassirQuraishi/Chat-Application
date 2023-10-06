@@ -5,6 +5,7 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const cors = require("cors");
 require("dotenv").config();
+const http = require("http");
 const sequelize = require("./Utilities/database");
 
 // Import Sequelize models
@@ -21,17 +22,24 @@ const userRoutes = require("./Routes/userRoutes");
 const chatRoutes = require("./Routes/chatRoutes");
 const groupRoutes = require("./Routes/groupRoutes");
 
+const chatController = require("./Controllers/chatController");
+const authenticateSocket = require("./middleware/authenticateSocket");
+
 // Create an Express application
 const app = express();
+const server = http.createServer(app);
+const socketIo = require("socket.io");
+const io = socketIo(server);
 
 // Middleware setup
 app.use(bodyParser.json()); // Parse JSON requests
 app.use(
 	cors({
-		origin: "http://127.0.0.1:5500", // Allow requests from this origin
+		origin: ["http://127.0.0.1:5501", "http://127.0.0.1:3000"], // Allow requests from these origins
 		credentials: true,
 	}),
 );
+app.use(express.static("Front-End"));
 
 // Define Sequelize model associations
 Contact.belongsTo(User, { as: "user", foreignKey: "userId" });
@@ -53,6 +61,35 @@ app.use("/users", loginRoutes); // Routes for user login
 app.use("/user", userRoutes); // Routes for user-related operations
 app.use("/chat", chatRoutes); // Routes for chat-related operations
 app.use("/groups", groupRoutes); // Routes for group-related operations
+app.get("/signup.html", (req, res) => {
+	console.log(req.url);
+	res.sendFile(__dirname + `/Front-End/Html/${req.url}`);
+});
+
+io.on("connection", (socket) => {
+	// Use the authenticateSocket middleware here
+	authenticateSocket(socket, (err) => {
+		if (err) {
+			// Handle authentication error
+			console.error("Authentication error:", err.message);
+			socket.disconnect(true); // Disconnect the socket
+		} else {
+			// Authentication successful, handle your chat logic here
+			console.log("User authentication succesfull");
+			socket.on("send-message", (messageDetail) => {
+				chatController.addChat(socket, messageDetail);
+				console.log("came back ");
+			});
+
+			//groupMessages
+			socket.on("send-group-message", (messageDetail) => {
+				console.log("hello");
+				chatController.sendGroupChats(socket, messageDetail);
+				console.log("cameback");
+			});
+		}
+	});
+});
 
 // Synchronize Sequelize models with the database
 sequelize
@@ -60,7 +97,7 @@ sequelize
 	.then((response) => {
 		const port = process.env.PORT || 3000; // Get the port from environment variables or use a default
 		console.log(`Starting server on port: ${port}`);
-		app.listen(port, () => {
+		server.listen(port, () => {
 			console.log("Server is running."); // Confirm that the server is running
 		});
 	})

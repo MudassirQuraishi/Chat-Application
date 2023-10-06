@@ -253,3 +253,9 @@ exports.acceptRequest = async (req, res) => {
 		});
 	}
 };
+
+exports.getSelfDetails = async (req, res) => {
+	const { user } = req;
+	const userDetails = await User.findByPk(user.id);
+	res.status(200).json({ success: true, data: userDetails });
+};

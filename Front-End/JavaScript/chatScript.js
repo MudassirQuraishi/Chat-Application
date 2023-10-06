@@ -18,7 +18,17 @@ const addMembersModal = document.getElementById("addMembersModal");
 const closeAddMembersModal = document.getElementById("closeAddMembersModal");
 const addMembersbutton = document.getElementById("manage-button");
 
-document.addEventListener("DOMContentLoaded", getAllChats());
+const default_profile_image = document.addEventListener("DOMContentLoaded", getAllChats());
+
+let profile_picture;
+// Initialize Socket.io and establish a connection
+const socket = io("http://127.0.0.1:3000", {
+	auth: {
+		token: token, // Provide the user's authentication token
+	},
+});
+const chatSockets = {};
+const groupSockets = {};
 // Function to show or hide chat buttons based on "chatActive" value
 function updateChatButtons() {
 	// Get the value of "chatActive" from local storage
@@ -42,9 +52,6 @@ function updateChatButtons() {
 		console.error("Invalid value for 'chatActive' in local storage: " + chatActive);
 	}
 }
-
-// Call the updateChatButtons function to initially set the buttons based on local storage
-updateChatButtons();
 
 /**
  * Function to handle the DOMContentLoaded event.
@@ -445,6 +452,20 @@ async function getAllChats() {
 		document.querySelectorAll("[data-conversation]").forEach(function (item) {
 			item.addEventListener("click", async function (e) {
 				e.preventDefault();
+				const chatId = item.id;
+				if (!chatSockets[chatId]) {
+					// Create a new socket connection for this chat
+					chatSockets[chatId] = io("http://127.0.0.1:3000", {
+						auth: {
+							token: token, // Provide the user's authentication token
+						},
+					});
+					// Handle chat events for this chat
+					chatSockets[chatId].on("receive-message", (newMessage) => {
+						// Handle incoming messages for this chat
+						createMessage(newMessage);
+					});
+				}
 
 				// Remove 'active' class from all conversations
 				document.querySelectorAll(".conversation").forEach(function (i) {
@@ -457,8 +478,8 @@ async function getAllChats() {
 				// Set the chat as active
 				localStorage.setItem("chatActive", "user");
 
-				// Generate the chat for the selected friend
-				await generateChat(item.id);
+				// // Generate the chat for the selected friend
+				await generateChat(chatId);
 			});
 		});
 	} catch (error) {
@@ -466,6 +487,313 @@ async function getAllChats() {
 		// Optionally, you can handle errors here, such as displaying an error message to the user.
 	}
 }
+
+/**
+ * Event listener for the button click.
+ * Determines the active chat type (user or group) and sends the message accordingly.
+ */
+button.addEventListener("click", () => {
+	try {
+		// Get the active chat type from local storage
+		const openedChat = localStorage.getItem("chatActive");
+		const chatId = localStorage.getItem("currentUser");
+		const groupId = localStorage.getItem("currentGroup");
+
+		if (openedChat === "user") {
+			console.log("Sending a user message...");
+			sendChat(chatId);
+		} else if (openedChat === "group") {
+			console.log("Sending a group message...");
+			sendGroupMsg(groupId);
+		} else {
+			console.error("Invalid chat type:", openedChat);
+		}
+	} catch (error) {
+		console.error("Error handling button click:", error);
+		// Handle errors, display an error message, or take appropriate actions.
+	}
+});
+
+/**
+ * Sends a chat message to the specified receiver in the active conversation.
+ */
+async function sendChat(chatId) {
+	try {
+		// Get receiver and conversation type from localStorage
+		const receiver = localStorage.getItem("currentUser");
+		const conversationType = localStorage.getItem("chatActive");
+
+		// Get the message input box
+		const messageBox = document.getElementById("chat-box");
+
+		// Create the message detail object
+		const messageDetail = {
+			content: messageBox.value,
+			receiver: receiver,
+			conversation_type: conversationType,
+			timeStamp: new Date(),
+			messageStatus: "sent",
+		};
+
+		// Use the socket associated with this chat
+		chatSockets[chatId].emit("send-message", messageDetail);
+		createMessage(messageDetail, profile_picture);
+
+		// Clear the message input box after sending
+		messageBox.value = "";
+	} catch (error) {
+		console.error("Error sending chat:", error);
+		// Handle the error as needed, e.g., displaying an error message to the user.
+	}
+}
+/**
+ * Creates and appends a chat message item to the conversation.
+ * @param {Object} item - The message data to be displayed.
+ */
+async function createMessage(item, profile_picture) {
+	try {
+		// Create a new list item element
+		const listItem = document.createElement("li");
+
+		// Determine the CSS class based on message status
+		if (item.messageStatus === "received") {
+			listItem.classList.add("conversation-item", "me");
+		} else {
+			listItem.classList.add("conversation-item");
+		}
+
+		// Create the conversation-item-side div
+		const sideDiv = document.createElement("div");
+		sideDiv.classList.add("conversation-item-side");
+
+		// Create the image element
+		const image = document.createElement("img");
+		image.classList.add("conversation-item-image");
+		image.src = profile_picture || item.profile_picture; // Use the actual sender's profile picture URL
+		image.alt = "";
+
+		// Append the image to the conversation-item-side div
+		sideDiv.appendChild(image);
+
+		// Create the conversation-item-content div
+		const contentDiv = document.createElement("div");
+		contentDiv.classList.add("conversation-item-content");
+
+		// Create the conversation-item-wrapper div
+		const wrapperDiv = document.createElement("div");
+		wrapperDiv.classList.add("conversation-item-wrapper");
+
+		// Create the conversation-item-box div
+		const boxDiv = document.createElement("div");
+		boxDiv.classList.add("conversation-item-box");
+
+		// Create the conversation-item-text div
+		const textDiv = document.createElement("div");
+		textDiv.classList.add("conversation-item-text");
+
+		// Create the paragraph element for the message content
+		const messageParagraph = document.createElement("p");
+		messageParagraph.textContent = item.content;
+
+		// Create the conversation-item-time div for the timestamp
+		const timeDiv = document.createElement("div");
+		timeDiv.classList.add("conversation-item-time");
+		timeDiv.textContent = item.createdAt;
+
+		// Append the message content and timestamp to the conversation-item-text div
+		textDiv.appendChild(messageParagraph);
+		textDiv.appendChild(timeDiv);
+
+		// Create the conversation-item-dropdown div
+		const dropdownDiv = document.createElement("div");
+		dropdownDiv.classList.add("conversation-item-dropdown");
+
+		// Create the dropdown toggle button
+		const toggleButton = document.createElement("button");
+		toggleButton.setAttribute("type", "button");
+		toggleButton.classList.add("conversation-item-dropdown-toggle");
+		toggleButton.innerHTML = `<i class="ri-more-2-line"></i>`;
+
+		// Create the dropdown list
+		const dropdownList = document.createElement("ul");
+		dropdownList.classList.add("conversation-item-dropdown-list");
+
+		// Create list items with links for the dropdown
+		const forwardListItem = document.createElement("li");
+		const forwardLink = document.createElement("a");
+		forwardLink.href = "#";
+		forwardLink.innerHTML = '<i class="ri-share-forward-line"></i> Forward';
+		forwardListItem.appendChild(forwardLink);
+
+		const deleteListItem = document.createElement("li");
+		const deleteLink = document.createElement("a");
+		deleteLink.href = "#";
+		deleteLink.innerHTML = '<i class="ri-delete-bin-line"></i> Delete';
+		deleteListItem.appendChild(deleteLink);
+
+		// Append the list items to the dropdown list
+		dropdownList.appendChild(forwardListItem);
+		dropdownList.appendChild(deleteListItem);
+
+		// Append the dropdown toggle button and dropdown list to the conversation-item-dropdown div
+		dropdownDiv.appendChild(toggleButton);
+		dropdownDiv.appendChild(dropdownList);
+
+		// Append the conversation-item-text and conversation-item-dropdown divs to the conversation-item-box div
+		boxDiv.appendChild(textDiv);
+		boxDiv.appendChild(dropdownDiv);
+
+		// Append the conversation-item-box div to the conversation-item-wrapper div
+		wrapperDiv.appendChild(boxDiv);
+
+		// Append the conversation-item-wrapper div to the conversation-item-content div
+		contentDiv.appendChild(wrapperDiv);
+
+		// Append the conversation-item-content div to the list item
+		listItem.appendChild(sideDiv);
+		listItem.appendChild(contentDiv);
+
+		// Get the conversation-wrapper ul element
+		const conversationWrapper = document.querySelector(".conversation-wrapper");
+
+		// Append the list item to the conversation-wrapper ul element
+		conversationWrapper.appendChild(listItem);
+	} catch (error) {
+		console.error("Error creating message:", error);
+	}
+}
+
+/**
+ * Generates the head of the chat section with user data.
+ * @param {object} userData - The user data to display in the chat head.
+ */
+async function generateHead(userData) {
+	try {
+		const container = document.querySelector(".conversation-user");
+
+		const img = document.createElement("img");
+		const divWrapper = document.createElement("div");
+		const divName = document.createElement("div");
+		const divStatus = document.createElement("div");
+
+		// Set attributes and text content
+		img.classList.add("conversation-user-image");
+		img.src = userData.profile_picture || "default_profile_image.jpg"; // Provide a default image if profile picture is not available
+		img.alt = "User Profile Image";
+		divWrapper.classList.add("conversation-user-details");
+		divName.classList.add("conversation-user-name");
+		divName.textContent = userData.username || "Unknown User"; // Provide a default username if not available
+		divStatus.classList.add("conversation-user-status", "online");
+		divStatus.textContent = "online";
+
+		// Clear any existing content in the container
+		container.innerHTML = "";
+
+		// Append elements to build the structure
+		divWrapper.appendChild(divName);
+		divWrapper.appendChild(divStatus);
+		container.appendChild(img);
+		container.appendChild(divWrapper);
+		updateChatButtons();
+	} catch (error) {
+		console.error("Error generating chat head:", error);
+		// Handle the error as needed, e.g., displaying a default user image and name.
+	}
+}
+
+/**
+ * Generates the main body of the chat by creating messages.
+ * @param {Array} data - An array of chat messages to be displayed.
+ */
+async function generateMain(data, profile_picture) {
+	try {
+		// Clear any existing chat messages
+		clearChatMessages();
+
+		// Iterate through the chat data and create messages
+		for (const item of data) {
+			await createMessage(item, profile_picture);
+		}
+	} catch (error) {
+		console.error("Error generating chat messages:", error);
+		// Handle the error as needed, e.g., displaying an error message to the user.
+	}
+}
+
+/**
+ * Clears existing chat messages from the chat area.
+ */
+function clearChatMessages() {
+	const chatArea = document.querySelector(".conversation-wrapper");
+
+	chatArea.innerHTML = ""; // Remove all chat messages from the chat area
+}
+
+/**
+ * Generates a chat interface for the given user.
+ * @param {string} id - The ID of the user with whom the chat is generated.
+ */
+async function generateChat(id) {
+	try {
+		// Clearing the container
+		const container = document.querySelector(".conversation-user");
+		container.innerHTML = "";
+
+		// Fetch chat data for the specified user
+		const response = await axios.get(`${API_BASE_URL}/user/get-chat/${id}`, {
+			headers: { Authorization: token },
+		});
+
+		const userData = response.data.user;
+		localStorage.setItem("currentUser", id);
+		localStorage.setItem("chatStatus", "true");
+
+		// Generate and display the chat head
+		await generateHead(userData);
+		let messages = 0;
+		const chats = await getChatAPI(id);
+
+		if (messages === 0 || messages < chats.length) {
+			messages = chats.length;
+			await generateMain(chats, userData.profile_picture);
+		}
+
+		// Reference to the conversation wrapper
+		//
+		// const receiver = localStorage.getItem("currentUser");
+		// const existingMessages = localStorage.getItem("Messages");
+		// const length = JSON.parse(existingMessages).length;
+		// const details = { receiver: receiver, existingMessages: length };
+	} catch (error) {
+		console.error("Error generating chat:", error);
+	}
+}
+/**
+ * Fetches all messages of a chat using the API.
+ * @param {string} token - Authorization token for API access.
+ * @param {Object} details - Details needed for fetching the chat.
+ * @returns {Array} An array of chat messages.
+ * @throws {Error} If there's an issue with the API request or response.
+ */
+async function getChatAPI(chatId) {
+	try {
+		const response = await axios.get(`${API_BASE_URL}/chat/get-chat/${chatId}`, {
+			headers: { Authorization: token },
+		});
+
+		if (response.status === 200) {
+			const messages = response.data.data;
+			localStorage.setItem("Messages", JSON.stringify(messages));
+			return messages;
+		} else {
+			throw new Error(`Failed to fetch chat messages. Status code: ${response.status}`);
+		}
+	} catch (error) {
+		console.error("Error fetching chat messages:", error);
+		throw error; // Re-throw the error for higher-level handling, if needed.
+	}
+}
+
 /**
  * Retrieves and displays all friend requests.
  */
@@ -604,330 +932,6 @@ async function getAllUsers() {
 }
 
 /**
- * Event listener for the button click.
- * Determines the active chat type (user or group) and sends the message accordingly.
- */
-button.addEventListener("click", () => {
-	try {
-		// Get the active chat type from local storage
-		const openedChat = localStorage.getItem("chatActive");
-
-		if (openedChat === "user") {
-			console.log("Sending a user message...");
-			sendChat();
-		} else if (openedChat === "group") {
-			console.log("Sending a group message...");
-			sendGroupMsg();
-		} else {
-			console.error("Invalid chat type:", openedChat);
-		}
-	} catch (error) {
-		console.error("Error handling button click:", error);
-		// Handle errors, display an error message, or take appropriate actions.
-	}
-});
-
-/**
- * Sends a chat message to the specified receiver in the active conversation.
- */
-async function sendChat() {
-	try {
-		// Get receiver and conversation type from localStorage
-		const receiver = localStorage.getItem("currentUser");
-		const conversationType = localStorage.getItem("chatActive");
-
-		// Get the message input box
-		const messageBox = document.getElementById("chat-box");
-
-		// Create the message detail object
-		const messageDetail = {
-			message: messageBox.value,
-			receiver: receiver,
-			conversation_type: conversationType,
-		};
-
-		// Send the chat message using Axios
-		const response = await axios.post(`${API_BASE_URL}/chat/send-chat`, messageDetail, {
-			headers: { Authorization: token },
-		});
-
-		// Clear the message input box after sending
-		messageBox.value = "";
-	} catch (error) {
-		console.error("Error sending chat:", error);
-		// Handle the error as needed, e.g., displaying an error message to the user.
-	}
-}
-
-/**
- * Creates and appends a chat message item to the conversation.
- * @param {Object} item - The message data to be displayed.
- */
-async function createMessage(item) {
-	try {
-		// Create a new list item element
-		const listItem = document.createElement("li");
-
-		// Determine the CSS class based on message status
-		if (item.messageStatus === "received") {
-			listItem.classList.add("conversation-item", "me");
-		} else {
-			listItem.classList.add("conversation-item");
-		}
-
-		// Create the conversation-item-side div
-		const sideDiv = document.createElement("div");
-		sideDiv.classList.add("conversation-item-side");
-
-		// Create the image element
-		const image = document.createElement("img");
-		image.classList.add("conversation-item-image");
-		// image.src = item.senderProfilePicture; // Use the actual sender's profile picture URL
-		image.alt = "";
-
-		// Append the image to the conversation-item-side div
-		sideDiv.appendChild(image);
-
-		// Create the conversation-item-content div
-		const contentDiv = document.createElement("div");
-		contentDiv.classList.add("conversation-item-content");
-
-		// Create the conversation-item-wrapper div
-		const wrapperDiv = document.createElement("div");
-		wrapperDiv.classList.add("conversation-item-wrapper");
-
-		// Create the conversation-item-box div
-		const boxDiv = document.createElement("div");
-		boxDiv.classList.add("conversation-item-box");
-
-		// Create the conversation-item-text div
-		const textDiv = document.createElement("div");
-		textDiv.classList.add("conversation-item-text");
-
-		// Create the paragraph element for the message content
-		const messageParagraph = document.createElement("p");
-		messageParagraph.textContent = item.content;
-
-		// Create the conversation-item-time div for the timestamp
-		const timeDiv = document.createElement("div");
-		timeDiv.classList.add("conversation-item-time");
-		timeDiv.textContent = item.createdAt;
-
-		// Append the message content and timestamp to the conversation-item-text div
-		textDiv.appendChild(messageParagraph);
-		textDiv.appendChild(timeDiv);
-
-		// Create the conversation-item-dropdown div
-		const dropdownDiv = document.createElement("div");
-		dropdownDiv.classList.add("conversation-item-dropdown");
-
-		// Create the dropdown toggle button
-		const toggleButton = document.createElement("button");
-		toggleButton.setAttribute("type", "button");
-		toggleButton.classList.add("conversation-item-dropdown-toggle");
-		toggleButton.innerHTML = `<i class="ri-more-2-line"></i>`;
-
-		// Create the dropdown list
-		const dropdownList = document.createElement("ul");
-		dropdownList.classList.add("conversation-item-dropdown-list");
-
-		// Create list items with links for the dropdown
-		const forwardListItem = document.createElement("li");
-		const forwardLink = document.createElement("a");
-		forwardLink.href = "#";
-		forwardLink.innerHTML = '<i class="ri-share-forward-line"></i> Forward';
-		forwardListItem.appendChild(forwardLink);
-
-		const deleteListItem = document.createElement("li");
-		const deleteLink = document.createElement("a");
-		deleteLink.href = "#";
-		deleteLink.innerHTML = '<i class="ri-delete-bin-line"></i> Delete';
-		deleteListItem.appendChild(deleteLink);
-
-		// Append the list items to the dropdown list
-		dropdownList.appendChild(forwardListItem);
-		dropdownList.appendChild(deleteListItem);
-
-		// Append the dropdown toggle button and dropdown list to the conversation-item-dropdown div
-		dropdownDiv.appendChild(toggleButton);
-		dropdownDiv.appendChild(dropdownList);
-
-		// Append the conversation-item-text and conversation-item-dropdown divs to the conversation-item-box div
-		boxDiv.appendChild(textDiv);
-		boxDiv.appendChild(dropdownDiv);
-
-		// Append the conversation-item-box div to the conversation-item-wrapper div
-		wrapperDiv.appendChild(boxDiv);
-
-		// Append the conversation-item-wrapper div to the conversation-item-content div
-		contentDiv.appendChild(wrapperDiv);
-
-		// Append the conversation-item-content div to the list item
-		listItem.appendChild(sideDiv);
-		listItem.appendChild(contentDiv);
-
-		// Get the conversation-wrapper ul element
-		const conversationWrapper = document.querySelector(".conversation-wrapper");
-
-		// Append the list item to the conversation-wrapper ul element
-		conversationWrapper.appendChild(listItem);
-	} catch (error) {
-		console.error("Error creating message:", error);
-	}
-}
-
-/**
- * Generates the head of the chat section with user data.
- * @param {object} userData - The user data to display in the chat head.
- */
-async function generateHead(userData) {
-	try {
-		const container = document.querySelector(".conversation-user");
-
-		const img = document.createElement("img");
-		const divWrapper = document.createElement("div");
-		const divName = document.createElement("div");
-		const divStatus = document.createElement("div");
-
-		// Set attributes and text content
-		img.classList.add("conversation-user-image");
-		img.src = userData.profile_picture || "default_profile_image.jpg"; // Provide a default image if profile picture is not available
-		img.alt = "User Profile Image";
-		divWrapper.classList.add("conversation-user-details");
-		divName.classList.add("conversation-user-name");
-		divName.textContent = userData.username || "Unknown User"; // Provide a default username if not available
-		divStatus.classList.add("conversation-user-status", "online");
-		divStatus.textContent = "online";
-
-		// Clear any existing content in the container
-		container.innerHTML = "";
-
-		// Append elements to build the structure
-		divWrapper.appendChild(divName);
-		divWrapper.appendChild(divStatus);
-		container.appendChild(img);
-		container.appendChild(divWrapper);
-		updateChatButtons();
-	} catch (error) {
-		console.error("Error generating chat head:", error);
-		// Handle the error as needed, e.g., displaying a default user image and name.
-	}
-}
-
-/**
- * Generates the main body of the chat by creating messages.
- * @param {Array} data - An array of chat messages to be displayed.
- */
-async function generateMain(data) {
-	try {
-		// Clear any existing chat messages
-		clearChatMessages();
-
-		// Iterate through the chat data and create messages
-		for (const item of data) {
-			await createMessage(item);
-		}
-	} catch (error) {
-		console.error("Error generating chat messages:", error);
-		// Handle the error as needed, e.g., displaying an error message to the user.
-	}
-}
-
-/**
- * Clears existing chat messages from the chat area.
- */
-function clearChatMessages() {
-	const chatArea = document.querySelector(".conversation-wrapper");
-
-	chatArea.innerHTML = ""; // Remove all chat messages from the chat area
-}
-
-/**
- * Fetches all messages of a chat using the API.
- * @param {string} token - Authorization token for API access.
- * @param {Object} details - Details needed for fetching the chat.
- * @returns {Array} An array of chat messages.
- * @throws {Error} If there's an issue with the API request or response.
- */
-async function getChatAPI(token, details) {
-	try {
-		const response = await axios.post(`${API_BASE_URL}/chat/get-chat`, details, {
-			headers: { Authorization: token },
-		});
-
-		if (response.status === 200) {
-			const messages = response.data.data;
-			localStorage.setItem("Messages", JSON.stringify(messages));
-			return messages;
-		} else {
-			throw new Error(`Failed to fetch chat messages. Status code: ${response.status}`);
-		}
-	} catch (error) {
-		console.error("Error fetching chat messages:", error);
-		throw error; // Re-throw the error for higher-level handling, if needed.
-	}
-}
-
-/**
- * Generates a chat interface for the given user.
- * @param {string} id - The ID of the user with whom the chat is generated.
- */
-async function generateChat(id) {
-	try {
-		// Clearing the container
-		const container = document.querySelector(".conversation-user");
-		container.innerHTML = "";
-
-		// Fetch chat data for the specified user
-		const response = await axios.get(`${API_BASE_URL}/user/get-chat/${id}`, {
-			headers: { Authorization: token },
-		});
-
-		const userData = response.data.user;
-		localStorage.setItem("currentUser", userData.id);
-		localStorage.setItem("chatStatus", "true");
-
-		// Generate and display the chat head
-		await generateHead(userData);
-
-		// Reference to the conversation wrapper
-		const conversationWrapper = document.querySelector(".conversation-wrapper");
-
-		// Poll for new messages every second
-		setInterval(async () => {
-			try {
-				// Apply fade-out transition
-				conversationWrapper.classList.remove("fade-in");
-				conversationWrapper.classList.add("fade-out");
-
-				setTimeout(async () => {
-					const receiver = localStorage.getItem("currentUser");
-					const existingMessages = localStorage.getItem("Messages");
-					const length = JSON.parse(existingMessages).length;
-					const details = { receiver: receiver, existingMessages: length };
-
-					let messages = 0;
-					const response = await getChatAPI(token, details);
-
-					if (messages === 0 || messages < response.length) {
-						conversationWrapper.innerHTML = "";
-						conversationWrapper.classList.remove("fade-out");
-						messages = response.length;
-						await generateMain(response);
-					}
-
-					conversationWrapper.classList.add("fade-in");
-				}, 500);
-			} catch (error) {
-				console.error("Error polling for new messages:", error);
-			}
-		}, 1000);
-	} catch (error) {
-		console.error("Error generating chat:", error);
-	}
-}
-
-/**
  * Creates a group card element and appends it to the container.
  * @param {Object} data - Group data including id, profile_picture, and group_name.
  */
@@ -973,7 +977,7 @@ function createGroupCard(data) {
 /**
  * Send a group chat message.
  */
-async function sendGroupMsg() {
+async function sendGroupMsg(groupId) {
 	try {
 		// Get the receiver (current group) and conversation type from local storage
 		const receiver = localStorage.getItem("currentGroup");
@@ -991,15 +995,16 @@ async function sendGroupMsg() {
 
 		// Create a message detail object
 		const messageDetail = {
-			message,
-			receiver,
-			conversation_type,
+			content: message,
+			conversation_type: conversation_type,
+			receiver: receiver,
+			timeStamp: new Date(),
+			messageStatus: "sent",
 		};
 
-		// Send the message to the group chat API
-		const response = await axios.post(`${API_BASE_URL}/chat/send-group-chat`, messageDetail, {
-			headers: { Authorization: token },
-		});
+		//Use the socket associated with this group
+		groupSockets[groupId].emit("send-group-message", messageDetail);
+		createMessage(messageDetail, profile_picture);
 
 		// Clear the chat box after sending
 		chatBox.value = "";
@@ -1039,6 +1044,19 @@ async function getAllGroups() {
 			document.querySelectorAll("[data-conversation]").forEach(function (item) {
 				item.addEventListener("click", async function (e) {
 					e.preventDefault();
+					const groupId = item.id;
+					console.log(groupId);
+					if (!groupSockets[groupId]) {
+						groupSockets[groupId] = io("http://127.0.0.1:3000", {
+							auth: {
+								token: token,
+							},
+						});
+						groupSockets[groupId].on("group-message", (newGroupMessage) => {
+							createMessage(newGroupMessage);
+						});
+					}
+
 					document.querySelectorAll(".conversation").forEach(function (i) {
 						i.classList.remove("active");
 					});
@@ -1098,11 +1116,12 @@ async function groupHead(userData) {
  * Generate the main content of the group chat.
  * @param {Object} data - Data containing previous chat messages.
  */
-async function groupMain(data) {
+async function groupMain(data, profile_picture) {
 	try {
 		// Loop through previous chat messages and create messages asynchronously
-		for (const item of data.data.data) {
-			await createMessage(item);
+		for (const item of data) {
+			console.log(item);
+			await createMessage(item, profile_picture);
 		}
 	} catch (error) {
 		console.error("Error generating group chat main content:", error.message);
@@ -1116,20 +1135,19 @@ async function groupMain(data) {
  * @param {Object} details - Details for fetching group chat messages.
  * @returns {Promise<Object>} A promise that resolves to the response from the server.
  */
-async function getGroupAPI(token, details) {
+async function getGroupAPI(groupId) {
 	try {
-		const response = await axios.post(`${API_BASE_URL}/chat/get-groupchat`, details, {
+		const response = await axios.get(`${API_BASE_URL}/chat/get-groupchat/${groupId}`, {
 			headers: { Authorization: token },
 		});
 
 		if (response.status === 200) {
 			const groupMessages = response.data.data;
 			localStorage.setItem("GroupMessages", JSON.stringify(groupMessages));
+			return groupMessages;
 		} else {
 			console.error("Failed to fetch group chat messages. Status code:", response.status);
 		}
-
-		return response;
 	} catch (error) {
 		console.error("Error while fetching group chat messages:", error.message);
 		throw error; // Rethrow the error to handle it further up the call stack if needed.
@@ -1159,28 +1177,13 @@ async function generateGroupChat(id) {
 		// Main chat area
 		const conversationWrapper = document.querySelector(".conversation-wrapper");
 
-		setInterval(async () => {
-			// Apply fade-out transition
-			conversationWrapper.classList.remove("fade-in");
-			conversationWrapper.classList.add("fade-out");
+		let groupMessages = 0;
+		const groupChats = await getGroupAPI(id);
 
-			setTimeout(async () => {
-				const receiver = localStorage.getItem("currentUser");
-				const existingMessages = localStorage.getItem("Messages");
-				const length = JSON.parse(existingMessages).length;
-				const details = { receiver: receiver, existingMessages: length };
-
-				let messages = 0;
-				const response = await getChatAPI(token, details);
-				if (messages === 0 || messages < response.length) {
-					conversationWrapper.innerHTML = "";
-					conversationWrapper.classList.remove("fade-out");
-					messages = response.length;
-					await generateMain(response);
-				}
-				conversationWrapper.classList.add("fade-in");
-			}, 500);
-		}, 1000);
+		if (groupMessages === 0 || groupChats < groupChats.length) {
+			groupMessages = groupChats.length;
+			await groupMain(groupChats, userData.profile_picture);
+		}
 
 		// Clear the interval when needed (e.g., when leaving the chat page)
 		// clearInterval(messageInterval);
@@ -1508,3 +1511,9 @@ closeAddMembersModal.addEventListener("click", () => {
 cancelAddMemberButton.addEventListener("click", () => {
 	addMembersModal.style.display = "none";
 });
+
+async function getSelfDetails() {
+	const selfDetails = await axios.get(`${API_BASE_URL}/user/self`, { headers: { Authorization: token } });
+	profile_picture = selfDetails.data.data.profile_picture;
+}
+getSelfDetails();

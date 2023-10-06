@@ -41,7 +41,7 @@ router.post("/send-group-chat", middleware.authenticateToken, chatController.sen
  * @param {Object} req.body - The user ID to retrieve chat messages with.
  * @returns {Array} An array of chat messages.
  */
-router.post("/get-chat", middleware.authenticateToken, chatController.getChats);
+router.get("/get-chat/:receiver_id", middleware.authenticateToken, chatController.getChats);
 
 /**
  * Get Group Chats Route
@@ -53,7 +53,7 @@ router.post("/get-chat", middleware.authenticateToken, chatController.getChats);
  * @param {Object} req.body - The group ID to retrieve chat messages from.
  * @returns {Array} An array of group chat messages.
  */
-router.post("/get-groupchat", middleware.authenticateToken, chatController.getGroupChats);
+router.get("/get-groupchat/:receiver_id", middleware.authenticateToken, chatController.getGroupChats);
 
 // Export the router for use in other parts of the application
 module.exports = router;

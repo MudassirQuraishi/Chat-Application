@@ -1,37 +1,46 @@
 /** @format */
 
 const Chat = require("../Models/messagesModel");
+const User = require("../Models/userModel");
 const { Op } = require("sequelize");
 
 /**
- * Add Chat Message
+ * Handle incoming chat message and save it to the database.
  *
- * Add a chat message from the authenticated user to another user.
- *
- * @param {Object} req - Express request object.
- * @param {Object} res - Express response object.
+ * @param {object} socket - The Socket.IO socket object representing the client connection.
+ * @param {object} messageDetail - Details of the chat message, including message content, receiver, and conversation type.
+ * @throws {Error} If there is an issue with message creation or database save.
  */
-exports.addChat = async (req, res) => {
+exports.addChat = async (socket, messageDetail) => {
 	try {
-		const { message, receiver } = req.body;
-		const { user } = req;
+		// Extract user information from the socket
+		const { user } = socket;
 
-		const sentMessage = await Chat.create({
-			content: message,
-			timeStamp: new Date(),
+		// Extract message details
+		const { content, receiver, conversation_type, timeStamp } = messageDetail;
+
+		// Create a new chat message and save it to the database
+		const newChatMessage = await Chat.create({
+			content: content,
+			timeStamp: timeStamp,
 			senderId: user.id,
 			receiverId: receiver,
-			conversation_type: "user",
+			conversation_type: conversation_type,
 		});
+		const receiverDetails = await User.findByPk(receiver);
 
-		res.status(200).json({
-			success: true,
-			message: "Successfully sent chat",
-			data: sentMessage,
-		});
+		const newMessage = {
+			...newChatMessage.dataValues,
+			messageStatus: "received",
+			profile_picture: receiverDetails.dataValues.profile_picture,
+		};
+		// Broadcast the new chat message to all connected clients
+		socket.broadcast.emit("receive-message", newMessage);
+		console.log("sent broadcast");
 	} catch (error) {
-		console.error("Error adding chat:", error);
-		res.status(500).json({ success: false, message: "Internal Server Error" });
+		// Handle any errors that occur during message creation or saving
+		console.error("Error in addChat:", error);
+		throw new Error("Failed to save chat message");
 	}
 };
 
@@ -47,13 +56,13 @@ exports.getChats = async (req, res) => {
 	const limit = 100;
 	try {
 		const { id } = req.user;
-		const { receiver } = req.body;
+		const { receiver_id } = req.params;
 
 		const dbMessages = await Chat.count({
 			where: {
 				[Op.or]: [
-					{ senderId: id, receiverId: receiver },
-					{ senderId: receiver, receiverId: id },
+					{ senderId: id, receiverId: receiver_id },
+					{ senderId: receiver_id, receiverId: id },
 				],
 				conversation_type: "user",
 			},
@@ -63,8 +72,8 @@ exports.getChats = async (req, res) => {
 		const response = await Chat.findAll({
 			where: {
 				[Op.or]: [
-					{ senderId: id, receiverId: receiver },
-					{ senderId: receiver, receiverId: id },
+					{ senderId: id, receiverId: receiver_id },
+					{ senderId: receiver_id, receiverId: id },
 				],
 				conversation_type: "user",
 			},
@@ -101,20 +110,23 @@ exports.getChats = async (req, res) => {
  * @param {Object} req - Express request object.
  * @param {Object} res - Express response object.
  */
-exports.sendGroupChats = async (req, res) => {
+exports.sendGroupChats = async (socket, messageDetail) => {
 	try {
-		const { message, receiver } = req.body;
-		const { user } = req;
+		const { user } = socket;
+		const { content, receiver, conversation_type, timeStamp } = messageDetail;
 
-		await Chat.create({
-			content: message,
-			conversation_type: "group",
+		const newGroupMessage = await Chat.create({
+			content: content,
+			timeStamp: timeStamp,
 			senderId: user.id,
 			groupId: receiver,
-			timeStamp: new Date(),
+			conversation_type: conversation_type,
 		});
-
-		res.status(200).json({ success: true });
+		const newMessage = {
+			...newGroupMessage.dataValues,
+			messageStatus: "received",
+		};
+		socket.broadcast.emit("group-message", newMessage);
 	} catch (error) {
 		console.error("Error sending group chat:", error);
 		res.status(500).json({ success: false, message: "Internal Server Error" });
@@ -132,19 +144,19 @@ exports.sendGroupChats = async (req, res) => {
 exports.getGroupChats = async (req, res) => {
 	try {
 		const limit = 100;
-		const { receiver } = req.body;
+		const { receiver_id } = req.params;
 		const { user } = req;
 
 		const dbMessages = await Chat.count({
 			where: {
-				groupId: receiver,
+				groupId: receiver_id,
 			},
 		});
 
 		let offset = dbMessages <= 100 ? 0 : dbMessages - limit;
 		const response = await Chat.findAll({
 			where: {
-				groupId: receiver,
+				groupId: receiver_id,
 			},
 			order: [["timestamp", "ASC"]],
 			offset: offset,
