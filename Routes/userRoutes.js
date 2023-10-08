@@ -1,5 +1,3 @@
-/** @format */
-
 const express = require("express");
 const middleware = require("../middleware/authentication");
 const userController = require("../Controllers/userController");
@@ -8,9 +6,9 @@ const userController = require("../Controllers/userController");
 const router = express.Router();
 
 /**
- * Contacts Route
+ * Get User Contacts
  *
- * Retrieve the contacts of the authenticated user.
+ * Retrieves the contacts of the authenticated user.
  *
  * @route GET /user/contacts
  * @authenticated
@@ -19,9 +17,9 @@ const router = express.Router();
 router.get("/contacts", middleware.authenticateToken, userController.getContacts);
 
 /**
- * Get Requests Route
+ * Get Contact Requests
  *
- * Retrieve pending contact requests for the authenticated user.
+ * Retrieves pending contact requests for the authenticated user.
  *
  * @route GET /user/get-requests
  * @authenticated
@@ -30,9 +28,9 @@ router.get("/contacts", middleware.authenticateToken, userController.getContacts
 router.get("/get-requests", middleware.authenticateToken, userController.getRequests);
 
 /**
- * Get Chat Route
+ * Get Chat Conversation
  *
- * Retrieve a chat conversation with a specific user.
+ * Retrieves a chat conversation with a specific user.
  *
  * @route GET /user/get-chat/:id
  * @authenticated
@@ -42,9 +40,9 @@ router.get("/get-requests", middleware.authenticateToken, userController.getRequ
 router.get("/get-chat/:id", middleware.authenticateToken, userController.getChat);
 
 /**
- * Get Group Chat Route
+ * Get Group Chat Conversation
  *
- * Retrieve a group chat conversation by ID.
+ * Retrieves a group chat conversation by ID.
  *
  * @route GET /user/get-group-chat/:id
  * @authenticated
@@ -54,9 +52,9 @@ router.get("/get-chat/:id", middleware.authenticateToken, userController.getChat
 router.get("/get-group-chat/:id", middleware.authenticateToken, userController.getGroupChat);
 
 /**
- * Accept Request Route
+ * Accept Contact Request
  *
- * Accept a contact request from another user.
+ * Accepts a contact request from another user.
  *
  * @route POST /user/add-user
  * @authenticated
@@ -65,9 +63,9 @@ router.get("/get-group-chat/:id", middleware.authenticateToken, userController.g
 router.post("/add-user", middleware.authenticateToken, userController.acceptRequest);
 
 /**
- * Add Contact Route
+ * Add Contact
  *
- * Send a contact request to another user.
+ * Sends a contact request to another user.
  *
  * @route POST /user/add-contact
  * @authenticated
@@ -76,9 +74,9 @@ router.post("/add-user", middleware.authenticateToken, userController.acceptRequ
 router.post("/add-contact", middleware.authenticateToken, userController.addContact);
 
 /**
- * Friends Route
+ * Get User Friends
  *
- * Retrieve the friends of the authenticated user.
+ * Retrieves the friends of the authenticated user.
  *
  * @route GET /user/friends
  * @authenticated
@@ -86,6 +84,15 @@ router.post("/add-contact", middleware.authenticateToken, userController.addCont
  */
 router.get("/friends", middleware.authenticateToken, userController.getFriends);
 
+/**
+ * Get Self Details
+ *
+ * Retrieves details of the authenticated user.
+ *
+ * @route GET /user/self
+ * @authenticated
+ * @returns {Object} Details of the authenticated user.
+ */
 router.get("/self", middleware.authenticateToken, userController.getSelfDetails);
 
 // Export the router for use in other parts of the application

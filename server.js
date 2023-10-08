@@ -6,10 +6,6 @@ require("dotenv").config();
 const http = require("http");
 const sequelize = require("./Utilities/database");
 
-const compression = require("compression"); // Middleware for compressing responses
-const morgan = require("morgan"); // Middleware for request logging
-const helmet = require("helmet"); // Middleware for security headers
-
 // Import Sequelize models
 const User = require("./Models/userModel");
 const Contact = require("./Models/contactModel");
