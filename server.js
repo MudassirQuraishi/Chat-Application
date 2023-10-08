@@ -1,5 +1,3 @@
-/** @format */
-
 // Import required dependencies
 const express = require("express");
 const bodyParser = require("body-parser");
@@ -8,9 +6,9 @@ require("dotenv").config();
 const http = require("http");
 const sequelize = require("./Utilities/database");
 
-const compression = require("compression"); // Added compression middleware
-const morgan = require("morgan"); // Added Morgan middleware
-const helmet = require("helmet"); // Added Helmet middleware
+const compression = require("compression"); // Middleware for compressing responses
+const morgan = require("morgan"); // Middleware for request logging
+const helmet = require("helmet"); // Middleware for security headers
 
 // Import Sequelize models
 const User = require("./Models/userModel");
@@ -62,31 +60,36 @@ app.use("/users", loginRoutes); // Routes for user login
 app.use("/user", userRoutes); // Routes for user-related operations
 app.use("/chat", chatRoutes); // Routes for chat-related operations
 app.use("/groups", groupRoutes); // Routes for group-related operations
+
+// Serve the signup HTML page
 app.get("/signup.html", (req, res) => {
-	console.log(req.url);
+	console.log("Request for signup.html");
 	res.sendFile(__dirname + `/Front-End/Html/${req.url}`);
 });
 
+// Handle WebSocket connections
 io.on("connection", (socket) => {
-	// Use the authenticateSocket middleware here
+	// Authenticate the socket connection
 	authenticateSocket(socket, (err) => {
 		if (err) {
 			// Handle authentication error
 			console.error("Authentication error:", err.message);
 			socket.disconnect(true); // Disconnect the socket
 		} else {
-			// Authentication successful, handle your chat logic here
-			console.log("User authentication succesfull");
+			// Authentication successful, handle chat logic
+			console.log("User authentication successful");
+
+			// Handle individual messages
 			socket.on("send-message", (messageDetail) => {
 				chatController.addChat(socket, messageDetail);
-				console.log("came back ");
+				console.log("Message sent");
 			});
 
-			//groupMessages
+			// Handle group chat messages
 			socket.on("send-group-message", (messageDetail) => {
-				console.log("hello");
+				console.log("Received group message");
 				chatController.sendGroupChats(socket, messageDetail);
-				console.log("cameback");
+				console.log("Group message sent");
 			});
 		}
 	});
@@ -97,11 +100,11 @@ sequelize
 	.sync()
 	.then((response) => {
 		const port = process.env.PORT || 3000; // Get the port from environment variables or use a default
-		console.log(`Starting server on port: ${port}`);
+		console.log(`Server started on port: ${port}`);
 		server.listen(port, () => {
-			console.log("Server is running."); // Confirm that the server is running
+			console.log("Server is running.");
 		});
 	})
 	.catch((error) => {
-		console.error("Error while starting / syncing the server:", error);
+		console.error("Error while starting/syncing the server:", error);
 	});

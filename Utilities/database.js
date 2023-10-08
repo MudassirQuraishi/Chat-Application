@@ -1,5 +1,3 @@
-/** @format */
-
 const Sequelize = require("sequelize");
 
 // Load database configuration from environment variables

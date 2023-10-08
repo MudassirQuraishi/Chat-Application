@@ -1,11 +1,10 @@
-/** @format */
-
+// Import necessary libraries
 const jwt = require("jsonwebtoken");
 
 /**
  * Generate Authentication Token
  *
- * This function generates an authentication token based on user data.
+ * Generates an authentication token based on user data.
  *
  * @param {Object} data - User data to be included in the token.
  * @returns {string} The generated JWT token.

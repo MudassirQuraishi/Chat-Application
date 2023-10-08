@@ -1,5 +1,3 @@
-/** @format */
-
 const express = require("express");
 const middleware = require("../middleware/authentication");
 const chatController = require("../Controllers/chatController");
@@ -10,7 +8,7 @@ const router = express.Router();
 /**
  * Send Chat Route
  *
- * Send a chat message to a user.
+ * Sends a chat message to a user.
  *
  * @route POST /chat/send-chat
  * @authenticated
@@ -22,7 +20,7 @@ router.post("/send-chat", middleware.authenticateToken, chatController.addChat);
 /**
  * Send Group Chat Route
  *
- * Send a chat message to a group.
+ * Sends a chat message to a group.
  *
  * @route POST /chat/send-group-chat
  * @authenticated
@@ -34,11 +32,11 @@ router.post("/send-group-chat", middleware.authenticateToken, chatController.sen
 /**
  * Get Chats Route
  *
- * Retrieve chat messages with a specific user.
+ * Retrieves chat messages with a specific user.
  *
- * @route POST /chat/get-chat
+ * @route GET /chat/get-chat/:receiver_id
  * @authenticated
- * @param {Object} req.body - The user ID to retrieve chat messages with.
+ * @param {string} receiver_id - The user ID to retrieve chat messages with.
  * @returns {Array} An array of chat messages.
  */
 router.get("/get-chat/:receiver_id", middleware.authenticateToken, chatController.getChats);
@@ -46,15 +44,25 @@ router.get("/get-chat/:receiver_id", middleware.authenticateToken, chatControlle
 /**
  * Get Group Chats Route
  *
- * Retrieve chat messages in a specific group.
+ * Retrieves chat messages in a specific group.
  *
- * @route POST /chat/get-groupchat
+ * @route GET /chat/get-groupchat/:receiver_id
  * @authenticated
- * @param {Object} req.body - The group ID to retrieve chat messages from.
+ * @param {string} receiver_id - The group ID to retrieve chat messages from.
  * @returns {Array} An array of group chat messages.
  */
 router.get("/get-groupchat/:receiver_id", middleware.authenticateToken, chatController.getGroupChats);
 
+/**
+ * Send Attachment Route
+ *
+ * Sends an attachment (e.g., file) to a user or group.
+ *
+ * @route POST /chat/upload/:receiverId
+ * @authenticated
+ * @param {string} receiverId - The user or group ID to send the attachment to.
+ * @returns {Object} A response indicating the success of the attachment send operation.
+ */
 router.post("/upload/:receiverId", middleware.authenticateToken, chatController.sendAttachment);
 
 // Export the router for use in other parts of the application

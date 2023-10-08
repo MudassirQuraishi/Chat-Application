@@ -2,9 +2,9 @@
 
 const Group = require("../Models/groupModel");
 const GroupMembers = require("../Models/groupMemberModel");
-const Contact = require("../Models/contactModel");
+
 const User = require("../Models/userModel");
-const { Op } = require("sequelize");
+const { Op, sequelize } = require("sequelize");
 
 /**
  * Create a New Group
@@ -18,21 +18,30 @@ exports.createGroup = async (req, res) => {
 	try {
 		const { name, description } = req.body;
 		const { user } = req;
+		const t = await sequelize.transaction();
 
-		const group = await Group.create({
-			group_name: name,
-			group_description: description,
-			createdByUserId: user.id,
-		});
+		const group = await Group.create(
+			{
+				group_name: name,
+				group_description: description,
+				createdByUserId: user.id,
+			},
+			{ transaction: t },
+		);
 
-		await GroupMembers.create({
-			userId: group.createdByUserId,
-			groupId: group.id,
-			is_admin: true,
-		});
+		await GroupMembers.create(
+			{
+				userId: group.createdByUserId,
+				groupId: group.id,
+				is_admin: true,
+			},
+			{ transaction: t },
+		);
+		await t.commit();
 
 		res.status(200).json({ success: true });
 	} catch (error) {
+		await t.rollback();
 		console.error("Error creating group:", error);
 		res.status(500).json({ success: false, error: "Internal Server Error" });
 	}

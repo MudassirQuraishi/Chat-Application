@@ -1,5 +1,3 @@
-/** @format */
-
 // Import necessary libraries
 const jwt = require("jsonwebtoken");
 
@@ -7,11 +5,10 @@ const jwt = require("jsonwebtoken");
 const User = require("../Models/userModel");
 
 /**
- * Middleware: Authenticate Token for WebSocket connections
+ * Authenticate Socket Middleware
  *
- * This middleware is used to authenticate a user based on a JSON Web Token (JWT)
- * during WebSocket connection. It verifies the token provided in the
- * socket.handshake.auth.token and attaches the authenticated user's information to the socket object.
+ * Middleware for authenticating WebSocket connections based on a JSON Web Token (JWT).
+ * It verifies the token provided in the socket.handshake.auth.token and attaches the authenticated user's information to the socket object.
  *
  * @param {Object} socket - Socket.io socket object.
  * @param {function} next - The next middleware function.

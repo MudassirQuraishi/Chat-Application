@@ -1,6 +1,3 @@
-/** @format */
-
-//
 const token = localStorage.getItem("token");
 const API_BASE_URL = "http://localhost:3000";
 const container = document.querySelector(".content-messages-list");
@@ -44,19 +41,17 @@ async function multiMediaHandler() {
 	const uploadForm = document.getElementById("uploadForm");
 	attachButton.addEventListener("click", async (e) => {
 		e.preventDefault();
-		const file = fileInput.files[0];
 		const formData = new FormData(uploadForm);
-		formData.append("file", file);
-		const toUploadFile = formData.get("file");
+		formData.append("file", fileInput.files[0]);
+
 		const data = {
 			type: "multimedia",
-			file: toUploadFile,
+			file: formData.get("file"),
 		};
 		const response = await axios.post(`${API_BASE_URL}/chat/upload/${chatId}`, data, {
 			headers: { Authorization: token, "Content-Type": "multipart/form-data" },
 		});
 		const res = response.data.saveFileToDb;
-		const isLink = true;
 		createMessage(res, profile_picture);
 		attachmentModal.style.display = "none"; // Hide the modal
 		fileInput.value = ""; // Clear the file input

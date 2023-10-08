@@ -1,5 +1,3 @@
-/** @format */
-
 // Import necessary libraries
 const jwt = require("jsonwebtoken");
 
@@ -7,11 +5,10 @@ const jwt = require("jsonwebtoken");
 const User = require("../Models/userModel");
 
 /**
- * Middleware: Authenticate Token
+ * Authenticate Token Middleware
  *
- * This middleware is used to authenticate a user based on a JSON Web Token (JWT).
- * It verifies the token provided in the request's "Authorization" header and
- * attaches the authenticated user's information to the request object.
+ * Middleware for authenticating a user based on a JSON Web Token (JWT).
+ * It verifies the token provided in the request's "Authorization" header and attaches the authenticated user's information to the request object.
  *
  * @param {Object} req - Express request object.
  * @param {Object} res - Express response object.

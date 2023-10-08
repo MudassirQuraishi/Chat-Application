@@ -2,7 +2,7 @@
 
 const Chat = require("../Models/messagesModel");
 const User = require("../Models/userModel");
-const Attachment = require("../Models/attachementModel.js");
+
 const multer = require("multer"); // For handling file uploads
 const AWS = require("aws-sdk"); // For working with AWS S3
 const { v4: uuidv4 } = require("uuid"); // For generating unique filenames
@@ -13,7 +13,7 @@ const Message = require("../Models/messagesModel");
 AWS.config.update({
 	accessKeyId: process.env.AWS_ACCESS_KEY,
 	secretAccessKey: process.env.AWS_ACCESS_SECRET,
-	region: "us-east-1", // Change to your desired AWS region
+	region: "us-east-1",
 });
 const s3 = new AWS.S3();
 

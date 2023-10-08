@@ -1,5 +1,3 @@
-/** @format */
-
 const { DataTypes } = require("sequelize");
 const sequelize = require("../Utilities/database");
 
