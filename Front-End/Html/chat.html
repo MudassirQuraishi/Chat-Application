@@ -112,7 +112,7 @@
 						</div>
 						<div class="conversation-form">
 							<button type="button" class="conversation-form-button">
-								<i class="ri-emotion-line"></i>
+								<i class="ri-attachment-2" id="attachment"></i>
 							</button>
 							<div class="conversation-form-group">
 								<textarea class="conversation-form-input" rows="1" id="chat-box" placeholder="Type here..."></textarea>
@@ -175,6 +175,16 @@
 					<div class="modal-buttons">
 						<button type="button" id="cancelAddMembersBtn">Cancel</button>
 					</div>
+				</form>
+			</div>
+		</div>
+		<div id="attachmentModal" style="display: none">
+			<div class="modal-content">
+				<form id="uploadForm" enctype="multipart/form-data">
+					<label for="attachment"> attachment</label>
+					<input type="file" name="file" class="attachemnt_input" id="fileInput" multiple />
+					<button id="sendAttachmentButton">Send File</button>
+					<button id="cancelAttachmentButton">Cancel</button>
 				</form>
 			</div>
 		</div>

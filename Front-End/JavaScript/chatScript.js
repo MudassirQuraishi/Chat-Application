@@ -17,8 +17,15 @@ const infoButton = document.getElementById("info-button-group");
 const addMembersModal = document.getElementById("addMembersModal");
 const closeAddMembersModal = document.getElementById("closeAddMembersModal");
 const addMembersbutton = document.getElementById("manage-button");
+const multiMediaButton = document.getElementById("attachment");
+const attachButton = document.getElementById("sendAttachmentButton");
+const fileInput = document.getElementById("fileInput");
+const attachmentModal = document.getElementById("attachmentModal");
+const cancelButton = document.getElementById("cancelAttachmentButton");
 
-const default_profile_image = document.addEventListener("DOMContentLoaded", getAllChats());
+multiMediaButton.addEventListener("click", multiMediaHandler);
+
+document.addEventListener("DOMContentLoaded", getAllChats());
 
 let profile_picture;
 // Initialize Socket.io and establish a connection
@@ -29,6 +36,37 @@ const socket = io("http://127.0.0.1:3000", {
 });
 const chatSockets = {};
 const groupSockets = {};
+
+async function multiMediaHandler() {
+	attachmentModal.style.display = "flex";
+	const chatId = localStorage.getItem("currentUser");
+	const fileInput = document.getElementById("fileInput");
+	const uploadForm = document.getElementById("uploadForm");
+	attachButton.addEventListener("click", async (e) => {
+		e.preventDefault();
+		const file = fileInput.files[0];
+		const formData = new FormData(uploadForm);
+		formData.append("file", file);
+		const toUploadFile = formData.get("file");
+		const data = {
+			type: "multimedia",
+			file: toUploadFile,
+		};
+		const response = await axios.post(`${API_BASE_URL}/chat/upload/${chatId}`, data, {
+			headers: { Authorization: token, "Content-Type": "multipart/form-data" },
+		});
+		const res = response.data.saveFileToDb;
+		const isLink = true;
+		createMessage(res, profile_picture);
+		attachmentModal.style.display = "none"; // Hide the modal
+		fileInput.value = ""; // Clear the file input
+	});
+	cancelAttachmentButton.addEventListener("click", () => {
+		attachmentModal.style.display = "none"; // Hide the modal
+		fileInput.value = ""; // Clear the file input
+	});
+}
+
 // Function to show or hide chat buttons based on "chatActive" value
 function updateChatButtons() {
 	// Get the value of "chatActive" from local storage
@@ -288,6 +326,7 @@ document.querySelectorAll(".conversation-back").forEach(function (item) {
  * Handle the opening and interactions with the modal.
  */
 function handleModal() {
+	console.log("moal opened");
 	try {
 		const modal = document.getElementById("myModal");
 		const closeModalButton = document.getElementById("closeModal");
@@ -303,6 +342,7 @@ function handleModal() {
 		});
 
 		// Add an event listener to handle form submission
+
 		confirmButton.addEventListener("click", async (e) => {
 			try {
 				e.preventDefault();
@@ -310,12 +350,9 @@ function handleModal() {
 				// Retrieve form input values
 				const groupName = document.getElementById("groupName").value;
 				const groupDescription = document.getElementById("groupDescription").value;
-				const groupUsers = document.getElementById("groupUsers").value;
-
 				const groupDetails = {
 					name: groupName,
 					description: groupDescription,
-					users: groupUsers,
 				};
 
 				// Send a POST request to the server to create the group
@@ -324,7 +361,6 @@ function handleModal() {
 				});
 
 				// Handle the response as needed, e.g., show success message
-				console.log("Group created:", response.data);
 
 				// Close the modal after successful submission
 				modal.style.display = "none";
@@ -463,7 +499,7 @@ async function getAllChats() {
 					// Handle chat events for this chat
 					chatSockets[chatId].on("receive-message", (newMessage) => {
 						// Handle incoming messages for this chat
-						createMessage(newMessage);
+						createMessage(newMessage, profile_picture);
 					});
 				}
 
@@ -551,113 +587,223 @@ async function sendChat(chatId) {
  * @param {Object} item - The message data to be displayed.
  */
 async function createMessage(item, profile_picture) {
+	console.log(item);
 	try {
 		// Create a new list item element
-		const listItem = document.createElement("li");
+		if (item.isAttachment === true) {
+			const listItem = document.createElement("li");
 
-		// Determine the CSS class based on message status
-		if (item.messageStatus === "received") {
-			listItem.classList.add("conversation-item", "me");
+			// Determine the CSS class based on message status
+			if (item.messageStatus === "received") {
+				listItem.classList.add("conversation-item", "me");
+			} else {
+				listItem.classList.add("conversation-item");
+			}
+
+			// Create the conversation-item-side div
+			const sideDiv = document.createElement("div");
+			sideDiv.classList.add("conversation-item-side");
+
+			// Create the image element
+			const image = document.createElement("img");
+			image.classList.add("conversation-item-image");
+			image.src = `${profile_picture}`; // Use the actual sender's profile picture URL
+			image.alt = "";
+
+			// Append the image to the conversation-item-side div
+			sideDiv.appendChild(image);
+
+			// Create the conversation-item-content div
+			const contentDiv = document.createElement("div");
+			contentDiv.classList.add("conversation-item-content");
+
+			// Create the conversation-item-wrapper div
+			const wrapperDiv = document.createElement("div");
+			wrapperDiv.classList.add("conversation-item-wrapper");
+
+			// Create the conversation-item-box div
+			const boxDiv = document.createElement("div");
+			boxDiv.classList.add("conversation-item-box");
+
+			// Create the conversation-item-text div
+			const textDiv = document.createElement("div");
+			textDiv.classList.add("conversation-item-text");
+
+			// Create the paragraph element for the message content
+			const messageParagraph = document.createElement("a");
+			messageParagraph.textContent = item.content;
+			messageParagraph.href = item.fileLocation;
+
+			// Create the conversation-item-time div for the timestamp
+			const timeDiv = document.createElement("div");
+			timeDiv.classList.add("conversation-item-time");
+			timeDiv.textContent = item.createdAt;
+
+			// Append the message content and timestamp to the conversation-item-text div
+			textDiv.appendChild(messageParagraph);
+			textDiv.appendChild(timeDiv);
+
+			// Create the conversation-item-dropdown div
+			const dropdownDiv = document.createElement("div");
+			dropdownDiv.classList.add("conversation-item-dropdown");
+
+			// Create the dropdown toggle button
+			const toggleButton = document.createElement("button");
+			toggleButton.setAttribute("type", "button");
+			toggleButton.classList.add("conversation-item-dropdown-toggle");
+			toggleButton.innerHTML = `<i class="ri-more-2-line"></i>`;
+
+			// Create the dropdown list
+			const dropdownList = document.createElement("ul");
+			dropdownList.classList.add("conversation-item-dropdown-list");
+
+			// Create list items with links for the dropdown
+			const forwardListItem = document.createElement("li");
+			const forwardLink = document.createElement("a");
+			forwardLink.href = "#";
+			forwardLink.innerHTML = '<i class="ri-share-forward-line"></i> Forward';
+			forwardListItem.appendChild(forwardLink);
+
+			const deleteListItem = document.createElement("li");
+			const deleteLink = document.createElement("a");
+			deleteLink.href = "#";
+			deleteLink.innerHTML = '<i class="ri-delete-bin-line"></i> Delete';
+			deleteListItem.appendChild(deleteLink);
+
+			// Append the list items to the dropdown list
+			dropdownList.appendChild(forwardListItem);
+			dropdownList.appendChild(deleteListItem);
+
+			// Append the dropdown toggle button and dropdown list to the conversation-item-dropdown div
+			dropdownDiv.appendChild(toggleButton);
+			dropdownDiv.appendChild(dropdownList);
+
+			// Append the conversation-item-text and conversation-item-dropdown divs to the conversation-item-box div
+			boxDiv.appendChild(textDiv);
+			boxDiv.appendChild(dropdownDiv);
+
+			// Append the conversation-item-box div to the conversation-item-wrapper div
+			wrapperDiv.appendChild(boxDiv);
+
+			// Append the conversation-item-wrapper div to the conversation-item-content div
+			contentDiv.appendChild(wrapperDiv);
+
+			// Append the conversation-item-content div to the list item
+			listItem.appendChild(sideDiv);
+			listItem.appendChild(contentDiv);
+
+			// Get the conversation-wrapper ul element
+			const conversationWrapper = document.querySelector(".conversation-wrapper");
+
+			// Append the list item to the conversation-wrapper ul element
+			conversationWrapper.appendChild(listItem);
 		} else {
-			listItem.classList.add("conversation-item");
+			const listItem = document.createElement("li");
+
+			// Determine the CSS class based on message status
+			if (item.messageStatus === "received") {
+				listItem.classList.add("conversation-item", "me");
+			} else {
+				listItem.classList.add("conversation-item");
+			}
+
+			// Create the conversation-item-side div
+			const sideDiv = document.createElement("div");
+			sideDiv.classList.add("conversation-item-side");
+
+			// Create the image element
+			const image = document.createElement("img");
+			image.classList.add("conversation-item-image");
+			image.src = `${profile_picture}`; // Use the actual sender's profile picture URL
+			image.alt = "";
+
+			// Append the image to the conversation-item-side div
+			sideDiv.appendChild(image);
+
+			// Create the conversation-item-content div
+			const contentDiv = document.createElement("div");
+			contentDiv.classList.add("conversation-item-content");
+
+			// Create the conversation-item-wrapper div
+			const wrapperDiv = document.createElement("div");
+			wrapperDiv.classList.add("conversation-item-wrapper");
+
+			// Create the conversation-item-box div
+			const boxDiv = document.createElement("div");
+			boxDiv.classList.add("conversation-item-box");
+
+			// Create the conversation-item-text div
+			const textDiv = document.createElement("div");
+			textDiv.classList.add("conversation-item-text");
+
+			// Create the paragraph element for the message content
+			const messageParagraph = document.createElement("p");
+			messageParagraph.textContent = item.content;
+
+			// Create the conversation-item-time div for the timestamp
+			const timeDiv = document.createElement("div");
+			timeDiv.classList.add("conversation-item-time");
+			timeDiv.textContent = item.createdAt;
+
+			// Append the message content and timestamp to the conversation-item-text div
+			textDiv.appendChild(messageParagraph);
+			textDiv.appendChild(timeDiv);
+
+			// Create the conversation-item-dropdown div
+			const dropdownDiv = document.createElement("div");
+			dropdownDiv.classList.add("conversation-item-dropdown");
+
+			// Create the dropdown toggle button
+			const toggleButton = document.createElement("button");
+			toggleButton.setAttribute("type", "button");
+			toggleButton.classList.add("conversation-item-dropdown-toggle");
+			toggleButton.innerHTML = `<i class="ri-more-2-line"></i>`;
+
+			// Create the dropdown list
+			const dropdownList = document.createElement("ul");
+			dropdownList.classList.add("conversation-item-dropdown-list");
+
+			// Create list items with links for the dropdown
+			const forwardListItem = document.createElement("li");
+			const forwardLink = document.createElement("a");
+			forwardLink.href = "#";
+			forwardLink.innerHTML = '<i class="ri-share-forward-line"></i> Forward';
+			forwardListItem.appendChild(forwardLink);
+
+			const deleteListItem = document.createElement("li");
+			const deleteLink = document.createElement("a");
+			deleteLink.href = "#";
+			deleteLink.innerHTML = '<i class="ri-delete-bin-line"></i> Delete';
+			deleteListItem.appendChild(deleteLink);
+
+			// Append the list items to the dropdown list
+			dropdownList.appendChild(forwardListItem);
+			dropdownList.appendChild(deleteListItem);
+
+			// Append the dropdown toggle button and dropdown list to the conversation-item-dropdown div
+			dropdownDiv.appendChild(toggleButton);
+			dropdownDiv.appendChild(dropdownList);
+
+			// Append the conversation-item-text and conversation-item-dropdown divs to the conversation-item-box div
+			boxDiv.appendChild(textDiv);
+			boxDiv.appendChild(dropdownDiv);
+
+			// Append the conversation-item-box div to the conversation-item-wrapper div
+			wrapperDiv.appendChild(boxDiv);
+
+			// Append the conversation-item-wrapper div to the conversation-item-content div
+			contentDiv.appendChild(wrapperDiv);
+
+			// Append the conversation-item-content div to the list item
+			listItem.appendChild(sideDiv);
+			listItem.appendChild(contentDiv);
+
+			// Get the conversation-wrapper ul element
+			const conversationWrapper = document.querySelector(".conversation-wrapper");
+
+			// Append the list item to the conversation-wrapper ul element
+			conversationWrapper.appendChild(listItem);
 		}
-
-		// Create the conversation-item-side div
-		const sideDiv = document.createElement("div");
-		sideDiv.classList.add("conversation-item-side");
-
-		// Create the image element
-		const image = document.createElement("img");
-		image.classList.add("conversation-item-image");
-		image.src = profile_picture || item.profile_picture; // Use the actual sender's profile picture URL
-		image.alt = "";
-
-		// Append the image to the conversation-item-side div
-		sideDiv.appendChild(image);
-
-		// Create the conversation-item-content div
-		const contentDiv = document.createElement("div");
-		contentDiv.classList.add("conversation-item-content");
-
-		// Create the conversation-item-wrapper div
-		const wrapperDiv = document.createElement("div");
-		wrapperDiv.classList.add("conversation-item-wrapper");
-
-		// Create the conversation-item-box div
-		const boxDiv = document.createElement("div");
-		boxDiv.classList.add("conversation-item-box");
-
-		// Create the conversation-item-text div
-		const textDiv = document.createElement("div");
-		textDiv.classList.add("conversation-item-text");
-
-		// Create the paragraph element for the message content
-		const messageParagraph = document.createElement("p");
-		messageParagraph.textContent = item.content;
-
-		// Create the conversation-item-time div for the timestamp
-		const timeDiv = document.createElement("div");
-		timeDiv.classList.add("conversation-item-time");
-		timeDiv.textContent = item.createdAt;
-
-		// Append the message content and timestamp to the conversation-item-text div
-		textDiv.appendChild(messageParagraph);
-		textDiv.appendChild(timeDiv);
-
-		// Create the conversation-item-dropdown div
-		const dropdownDiv = document.createElement("div");
-		dropdownDiv.classList.add("conversation-item-dropdown");
-
-		// Create the dropdown toggle button
-		const toggleButton = document.createElement("button");
-		toggleButton.setAttribute("type", "button");
-		toggleButton.classList.add("conversation-item-dropdown-toggle");
-		toggleButton.innerHTML = `<i class="ri-more-2-line"></i>`;
-
-		// Create the dropdown list
-		const dropdownList = document.createElement("ul");
-		dropdownList.classList.add("conversation-item-dropdown-list");
-
-		// Create list items with links for the dropdown
-		const forwardListItem = document.createElement("li");
-		const forwardLink = document.createElement("a");
-		forwardLink.href = "#";
-		forwardLink.innerHTML = '<i class="ri-share-forward-line"></i> Forward';
-		forwardListItem.appendChild(forwardLink);
-
-		const deleteListItem = document.createElement("li");
-		const deleteLink = document.createElement("a");
-		deleteLink.href = "#";
-		deleteLink.innerHTML = '<i class="ri-delete-bin-line"></i> Delete';
-		deleteListItem.appendChild(deleteLink);
-
-		// Append the list items to the dropdown list
-		dropdownList.appendChild(forwardListItem);
-		dropdownList.appendChild(deleteListItem);
-
-		// Append the dropdown toggle button and dropdown list to the conversation-item-dropdown div
-		dropdownDiv.appendChild(toggleButton);
-		dropdownDiv.appendChild(dropdownList);
-
-		// Append the conversation-item-text and conversation-item-dropdown divs to the conversation-item-box div
-		boxDiv.appendChild(textDiv);
-		boxDiv.appendChild(dropdownDiv);
-
-		// Append the conversation-item-box div to the conversation-item-wrapper div
-		wrapperDiv.appendChild(boxDiv);
-
-		// Append the conversation-item-wrapper div to the conversation-item-content div
-		contentDiv.appendChild(wrapperDiv);
-
-		// Append the conversation-item-content div to the list item
-		listItem.appendChild(sideDiv);
-		listItem.appendChild(contentDiv);
-
-		// Get the conversation-wrapper ul element
-		const conversationWrapper = document.querySelector(".conversation-wrapper");
-
-		// Append the list item to the conversation-wrapper ul element
-		conversationWrapper.appendChild(listItem);
 	} catch (error) {
 		console.error("Error creating message:", error);
 	}
@@ -755,7 +901,7 @@ async function generateChat(id) {
 
 		if (messages === 0 || messages < chats.length) {
 			messages = chats.length;
-			await generateMain(chats, userData.profile_picture);
+			await generateMain(chats, profile_picture);
 		}
 
 		// Reference to the conversation wrapper
@@ -1045,7 +1191,7 @@ async function getAllGroups() {
 				item.addEventListener("click", async function (e) {
 					e.preventDefault();
 					const groupId = item.id;
-					console.log(groupId);
+
 					if (!groupSockets[groupId]) {
 						groupSockets[groupId] = io("http://127.0.0.1:3000", {
 							auth: {
@@ -1053,7 +1199,7 @@ async function getAllGroups() {
 							},
 						});
 						groupSockets[groupId].on("group-message", (newGroupMessage) => {
-							createMessage(newGroupMessage);
+							createMessage(newGroupMessage, profile_picture);
 						});
 					}
 
@@ -1324,7 +1470,6 @@ infoButton.addEventListener("click", async () => {
 								checkedUserIds.push(checkbox.value);
 							}
 						});
-						console.log(checkedUserIds);
 
 						// Prepare the data for the group invitation
 						const details = {
@@ -1396,7 +1541,6 @@ infoButton.addEventListener("click", async () => {
 								checkedUserIds.push(checkbox.value);
 							}
 						});
-						console.log(checkedUserIds);
 
 						// Prepare the data for the group invitation
 						const details = {
@@ -1465,7 +1609,6 @@ infoButton.addEventListener("click", async () => {
 								checkedUserIds.push(checkbox.value);
 							}
 						});
-						console.log(checkedUserIds);
 
 						// Prepare the data for the group invitation
 						const details = {

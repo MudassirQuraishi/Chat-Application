@@ -55,5 +55,7 @@ router.get("/get-chat/:receiver_id", middleware.authenticateToken, chatControlle
  */
 router.get("/get-groupchat/:receiver_id", middleware.authenticateToken, chatController.getGroupChats);
 
+router.post("/upload/:receiverId", middleware.authenticateToken, chatController.sendAttachment);
+
 // Export the router for use in other parts of the application
 module.exports = router;

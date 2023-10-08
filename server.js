@@ -7,6 +7,11 @@ const cors = require("cors");
 require("dotenv").config();
 const http = require("http");
 const sequelize = require("./Utilities/database");
+const aws = require("aws-sdk");
+const multer = require("multer");
+const multerS3 = require("multer-s3");
+const path = require("path");
+const uuid = require("uuid").v4();
 
 // Import Sequelize models
 const User = require("./Models/userModel");
@@ -55,6 +60,34 @@ Message.belongsTo(User, { as: "receiver", foreignKey: "receiverId" });
 Message.belongsTo(Group, { as: "group", foreignKey: "groupId" });
 
 Attachment.belongsTo(Message, { as: "message", foreignKey: "messageId" });
+// const s3 = new aws.S3();
+
+// const storage = multer.memoryStorage(); // Store the file in memory
+// const upload = multer({
+// 	storage: multerS3({
+// 		s3: s3,
+// 		bucket: process.env.AWS_BUCKET_NAME,
+// 		contentType: multerS3.AUTO_CONTENT_TYPE,
+// 		acl: "public-read", // Adjust permissions as needed
+// 		key: function (req, file, cb) {
+// 			// Generate a unique key for each file
+// 			const ext = file.originalname.split(".").pop();
+// 			const key = `${Date.now().toString()}.${ext}`;
+// 			cb(null, key);
+// 		},
+// 	}),
+// });
+
+// app.post("/upload", upload.single("file"), (req, res) => {
+// 	console.log("Request body:", req.body);
+// 	console.log("Request file:", req.file);
+
+// 	if (!req.file) {
+// 		return res.status(400).json({ error: "No file uploaded." });
+// 	}
+
+// 	// Continue processing or saving the file.
+// });
 
 // Register routes
 app.use("/users", loginRoutes); // Routes for user login

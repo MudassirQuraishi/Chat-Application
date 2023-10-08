@@ -2,7 +2,81 @@
 
 const Chat = require("../Models/messagesModel");
 const User = require("../Models/userModel");
+const Attachment = require("../Models/attachementModel.js");
+const multer = require("multer"); // For handling file uploads
+const AWS = require("aws-sdk"); // For working with AWS S3
+const { v4: uuidv4 } = require("uuid"); // For generating unique filenames
 const { Op } = require("sequelize");
+const Message = require("../Models/messagesModel");
+
+// Configure AWS SDK
+AWS.config.update({
+	accessKeyId: process.env.AWS_ACCESS_KEY,
+	secretAccessKey: process.env.AWS_ACCESS_SECRET,
+	region: "us-east-1", // Change to your desired AWS region
+});
+const s3 = new AWS.S3();
+
+// Configure Multer for file uploads
+const storage = multer.memoryStorage();
+const upload = multer({ storage: storage });
+
+exports.sendAttachment = async (req, res) => {
+	const { user } = req;
+	const { receiverId } = req.params;
+	console.log(req.params);
+	// Here, upload.single('file') middleware will process the file upload
+	upload.single("file")(req, res, async (err) => {
+		if (err) {
+			// Handle the multer error (e.g., file too large, unsupported file type)
+			console.error("Multer error:", err);
+			return res.status(400).json({ success: false, error: "File upload failed." });
+		}
+
+		// At this point, the file should have been processed and available in req.file
+		const file = req.file;
+		console.log(file);
+
+		if (!file) {
+			return res.status(400).json({ success: false, error: "No file uploaded." });
+		}
+
+		// Now, you can use req.file to access the uploaded file
+		const fileName = `Expenses_${req.user.id}_${new Date()}`;
+
+		// Define parameters for the S3 upload
+		const s3Params = {
+			Bucket: process.env.AWS_BUCKET_NAME,
+			Key: fileName, // Specify the key (filename) under which the file will be stored in S3
+			Body: file.buffer, // File content
+			ACL: process.env.AWS_ACCESS_STATUS,
+		};
+
+		// Upload the file to S3
+		s3.upload(s3Params, async (err, data) => {
+			if (err) {
+				console.error("S3 upload error:", err);
+				return res.status(500).json({ success: false, error: "Error uploading file to S3." });
+			}
+
+			// The file has been successfully uploaded to S3, and data.Location contains the S3 URL
+			const s3FileLocation = data.Location;
+
+			const saveFileToDb = await Chat.create({
+				content: file.originalname,
+				conversation_type: "user",
+				timeStamp: new Date(),
+				senderId: user.id,
+				receiverId: receiverId,
+				fileLocation: s3FileLocation,
+				isAttachment: true,
+			});
+			// You can now save the s3FileLocation in your database or perform any other necessary actions
+
+			res.status(200).json({ success: true, saveFileToDb });
+		});
+	});
+};
 
 /**
  * Handle incoming chat message and save it to the database.
