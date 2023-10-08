@@ -7,11 +7,10 @@ const cors = require("cors");
 require("dotenv").config();
 const http = require("http");
 const sequelize = require("./Utilities/database");
-const aws = require("aws-sdk");
-const multer = require("multer");
-const multerS3 = require("multer-s3");
-const path = require("path");
-const uuid = require("uuid").v4();
+
+const compression = require("compression"); // Added compression middleware
+const morgan = require("morgan"); // Added Morgan middleware
+const helmet = require("helmet"); // Added Helmet middleware
 
 // Import Sequelize models
 const User = require("./Models/userModel");
