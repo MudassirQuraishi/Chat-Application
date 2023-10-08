@@ -25,6 +25,13 @@ const Message = sequelize.define("Message", {
 		allowNull: false,
 		//  The timestamp of the message, which must not be null.
 	},
+	isAttachment: {
+		type: DataTypes.BOOLEAN,
+		defaultValue: false,
+	},
+	fileLocation: {
+		type: DataTypes.TEXT,
+	},
 });
 
 // Export the Message model
