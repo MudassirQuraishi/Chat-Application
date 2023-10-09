@@ -15,10 +15,10 @@ const { Op, sequelize } = require("sequelize");
  * @param {Object} res - Express response object.
  */
 exports.createGroup = async (req, res) => {
+	const t = await sequelize.transaction();
 	try {
 		const { name, description } = req.body;
 		const { user } = req;
-		const t = await sequelize.transaction();
 
 		const group = await Group.create(
 			{
