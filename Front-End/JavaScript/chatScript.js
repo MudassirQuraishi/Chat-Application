@@ -497,6 +497,10 @@ async function getAllChats() {
 						// Handle incoming messages for this chat
 						createMessage(newMessage, profile_picture);
 					});
+					chatSockets[chatId].on("group-message", (newMessage) => {
+						// Handle incoming messages for this chat
+						createMessage(newMessage, profile_picture);
+					});
 				}
 
 				// Remove 'active' class from all conversations
