@@ -94,8 +94,8 @@ app.use("/groups", groupRoutes); // Routes for group-related operations
 
 // Serve the signup HTML page
 app.use((req, res) => {
-	console.log(req.url);
-	typeof req.url;
+	console.log(typeof req.url);
+
 	res.sendFile(path.join(__dirname, `/Front-End/Html/${req.url}`));
 });
 
