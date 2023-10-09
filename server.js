@@ -6,6 +6,8 @@ require("dotenv").config();
 const http = require("http");
 const sequelize = require("./Utilities/database");
 const cron = require("node-cron");
+const fs = require("fs");
+const path = require("path");
 
 // Import Sequelize models
 const User = require("./Models/userModel");
@@ -38,7 +40,7 @@ app.use(
 		credentials: true,
 	}),
 );
-app.use(express.static("Front-End"));
+app.use(express.static(path.join(__dirname, "Front-End")));
 
 // Define Sequelize model associations
 Contact.belongsTo(User, { as: "user", foreignKey: "userId" });
@@ -91,9 +93,9 @@ app.use("/chat", chatRoutes); // Routes for chat-related operations
 app.use("/groups", groupRoutes); // Routes for group-related operations
 
 // Serve the signup HTML page
-app.get("/signup.html", (req, res) => {
-	console.log("Request for signup.html");
-	res.sendFile(__dirname + `/Front-End/Html/${req.url}`);
+app.use((req, res) => {
+	console.log(req.url);
+	res.sendFile(path.join(__dirname, `/Front-End/Html/${req.url}`));
 });
 
 // Handle WebSocket connections
