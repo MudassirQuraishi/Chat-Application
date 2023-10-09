@@ -94,8 +94,10 @@ app.use("/groups", groupRoutes); // Routes for group-related operations
 
 // Serve the signup HTML page
 app.use((req, res) => {
-	console.log(typeof req.url);
-	let url = req.url.slice(0, -1);
+	let url = req.url;
+	if (req.url.charAt(req.url.length - 1) == "?") {
+		url = req.url.slice(0, -1);
+	}
 
 	res.sendFile(path.join(__dirname, `/Front-End/Html/${url}`));
 });
