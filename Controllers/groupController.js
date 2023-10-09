@@ -4,7 +4,8 @@ const Group = require("../Models/groupModel");
 const GroupMembers = require("../Models/groupMemberModel");
 
 const User = require("../Models/userModel");
-const { Op, sequelize } = require("sequelize");
+const { Op } = require("sequelize");
+const sequelize = require("../Utilities/database");
 
 /**
  * Create a New Group
