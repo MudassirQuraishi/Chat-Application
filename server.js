@@ -5,6 +5,7 @@ const cors = require("cors");
 require("dotenv").config();
 const http = require("http");
 const sequelize = require("./Utilities/database");
+const cron = require("node-cron");
 
 // Import Sequelize models
 const User = require("./Models/userModel");
@@ -12,6 +13,7 @@ const Contact = require("./Models/contactModel");
 const Group = require("./Models/groupModel");
 const GroupMember = require("./Models/groupMemberModel");
 const Message = require("./Models/messagesModel");
+const ArchivedMessage = require("./Models/archivedChats");
 
 // Import routes
 const loginRoutes = require("./Routes/loginRoutes");
@@ -50,6 +52,37 @@ GroupMember.belongsTo(Group, { as: "group", foreignKey: "groupId" });
 Message.belongsTo(User, { as: "sender", foreignKey: "senderId" });
 Message.belongsTo(User, { as: "receiver", foreignKey: "receiverId" });
 Message.belongsTo(Group, { as: "group", foreignKey: "groupId" });
+
+cron.schedule("0 0 * * *", async () => {
+	try {
+		// Find and archive older messages
+		const oneDayAgo = new Date();
+		oneDayAgo.setDate(oneDayAgo.getDate() - 1);
+
+		const olderMessages = await Message.findAll({
+			where: {
+				timestamp: {
+					[Op.lt]: oneDayAgo,
+				},
+			},
+		});
+
+		await ArchivedMessage.bulkCreate(olderMessages.map((message) => message.toJSON()));
+
+		// Delete older messages from the Chat table
+		await Message.destroy({
+			where: {
+				timestamp: {
+					[Op.lt]: oneDayAgo,
+				},
+			},
+		});
+
+		console.log("Chat messages archived and deleted successfully.");
+	} catch (error) {
+		console.error("Error archiving and deleting chat messages:", error);
+	}
+});
 
 // Register routes
 app.use("/users", loginRoutes); // Routes for user login
