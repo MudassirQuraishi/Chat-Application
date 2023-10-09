@@ -26,7 +26,7 @@ document.addEventListener("DOMContentLoaded", getAllChats());
 
 let profile_picture;
 // Initialize Socket.io and establish a connection
-const socket = io("http://127.0.0.1:3000", {
+const socket = io(`${API_BASE_URL}`, {
 	auth: {
 		token: token, // Provide the user's authentication token
 	},
