@@ -48,7 +48,7 @@ async function multiMediaHandler() {
 			type: "multimedia",
 			file: formData.get("file"),
 		};
-		chatSockets[chatId].emit("send-message", messageDetail);
+		chatSockets[chatId].emit("send-message", data);
 		const response = await axios.post(`${API_BASE_URL}/chat/upload/${chatId}`, data, {
 			headers: { Authorization: token, "Content-Type": "multipart/form-data" },
 		});
