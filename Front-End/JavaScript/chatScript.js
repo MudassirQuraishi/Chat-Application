@@ -1,5 +1,5 @@
 const token = localStorage.getItem("token");
-const API_BASE_URL = "http://localhost:3000";
+const API_BASE_URL = "http://3.26.103.91:3000";
 const container = document.querySelector(".content-messages-list");
 const contentMessagesContainer = document.getElementsByClassName("group-add");
 const groupAddDiv = document.getElementById("groupAddDiv");
@@ -48,6 +48,7 @@ async function multiMediaHandler() {
 			type: "multimedia",
 			file: formData.get("file"),
 		};
+		chatSockets[chatId].emit("send-message", messageDetail);
 		const response = await axios.post(`${API_BASE_URL}/chat/upload/${chatId}`, data, {
 			headers: { Authorization: token, "Content-Type": "multipart/form-data" },
 		});
