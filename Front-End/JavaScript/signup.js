@@ -46,7 +46,7 @@ async function signup() {
 		};
 
 		// Make a POST call to the backend to save user information
-		const response = await axios.post("http://localhost:3000/users/signup", signupDetails);
+		const response = await axios.post("http://3.26.103.91:3000/users/signup", signupDetails);
 
 		if (response.status === 200) {
 			alert("Account created successfully. Log in to continue.");
@@ -77,7 +77,7 @@ async function signin() {
 		};
 
 		// Make a POST call to the backend to verify user credentials
-		const response = await axios.post("http://localhost:3000/users/login", signinDetails);
+		const response = await axios.post("http://3.26.103.91:3000/users/login", signinDetails);
 
 		if (response.status === 200) {
 			// Store the user information (encrypted ID) in local storage for authentication
