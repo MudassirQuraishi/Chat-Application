@@ -16,7 +16,7 @@ const HOST = process.env.DB_HOST;
 const sequelize = new Sequelize(SCHEMA, USER, PASSWORD, {
 	dialect: "mysql", // Set the database dialect to MySQL
 	host: HOST, // Set the database host
-	logging: false, // Enable logging of SQL queries
+	logging: true, // Enable logging of SQL queries
 });
 
 // Export the configured Sequelize instance
