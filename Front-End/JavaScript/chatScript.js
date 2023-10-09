@@ -487,7 +487,7 @@ async function getAllChats() {
 				const chatId = item.id;
 				if (!chatSockets[chatId]) {
 					// Create a new socket connection for this chat
-					chatSockets[chatId] = io("http://127.0.0.1:3000", {
+					chatSockets[chatId] = io(`${API_BASE_URL}`, {
 						auth: {
 							token: token, // Provide the user's authentication token
 						},
@@ -1189,7 +1189,7 @@ async function getAllGroups() {
 					const groupId = item.id;
 
 					if (!groupSockets[groupId]) {
-						groupSockets[groupId] = io("http://127.0.0.1:3000", {
+						groupSockets[groupId] = io(`${API_BASE_URL}`, {
 							auth: {
 								token: token,
 							},
