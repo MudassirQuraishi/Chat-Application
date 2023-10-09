@@ -32,7 +32,7 @@ const io = socketIo(server);
 app.use(bodyParser.json()); // Parse JSON requests
 app.use(
 	cors({
-		origin: ["http://127.0.0.1:5501", "http://127.0.0.1:3000", "http://3.26.103.91:3000"], // Allow requests from these origins
+		origin: ["http://127.0.0.1:5501", "http://127.0.0.1:3000", "http://3.26.103.91:3000", "http://3.26.103.91"], // Allow requests from these origins
 		credentials: true,
 	}),
 );
