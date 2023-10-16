@@ -6,7 +6,6 @@ require("dotenv").config();
 const http = require("http");
 const sequelize = require("./Utilities/database");
 const cron = require("node-cron");
-const fs = require("fs");
 const path = require("path");
 
 // Import Sequelize models
