@@ -39,7 +39,7 @@ const authenticateSocket = (socket, next) => {
 	} catch (error) {
 		// Handle JWT verification errors
 		console.error("Error in authentication:", error);
-		next(new Error("Authentication error: Invalid token"));
+		res.status(500).json({ error: "Internal Server Error" });
 	}
 };
 

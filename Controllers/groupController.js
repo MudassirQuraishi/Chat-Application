@@ -107,7 +107,7 @@ exports.inviteMember = async (req, res) => {
 			});
 		});
 
-		res.status(204).send(); // Successfully invited users
+		res.status(200).json({ success: true }); // Successfully invited users
 	} catch (error) {
 		console.error("Error inviting members:", error);
 		res.status(500).json({ success: false, error: "Internal Server Error" });

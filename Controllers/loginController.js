@@ -44,7 +44,7 @@ exports.signup = async (req, res) => {
 					user,
 				});
 			} else {
-				res.status(409).json({ success: false, message: "User Already Exists" });
+				res.status(304).json({ success: false, message: "User Already Exists" });
 			}
 		});
 	} catch (error) {
